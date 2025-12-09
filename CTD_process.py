@@ -40,7 +40,7 @@ def OrdinalToDatetime(ordinal):
 
 #%%Section 2: Metadata
 ###
-creator_name = "Carmen Holmes-Smith"; processor_name = creator_name
+creator_name = "Shannon Nudds"; processor_name = creator_name
 creator_email = "Carmen.Holmes-Smith@dfo-mpo.gc.ca"; processor_email = creator_email
 # directory = f'./2022-2024/CTD/M2170_SN22954/'                         # directory of raw data file
 directory = f'./Barrow_RawData/'                         # directory of raw data file
