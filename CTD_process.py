@@ -654,7 +654,7 @@ detect_spikes_do = False  # Optional: Detect in DO
 detect_spikes_p = False   # Optional: Detect in Pressure
 #
 #region
-Use_CHS_Func = True # Function I prefer to use to suggest flags
+Use_CHS_Func = False # Function I prefer to use to suggest flags
 #sample_rate = 900
 # Spike detection parameters
 if sample_rate == 900:
