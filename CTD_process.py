@@ -786,8 +786,8 @@ else:
 	# Run spike detection (as guidance only)
 	spike_indices_t = detect_spikes(t, n1, n2, block) if detect_spikes_t else []
 	spike_indices_c = detect_spikes(c, n1, n2, block) if detect_spikes_c else []
-	spike_indices_do = detect_spikes(do, n1, n2, block) if detect_spikes_do and 'do' in trimmed_data else []
-	spike_indices_p = detect_spikes(p, n1, n2, block) if detect_spikes_p and 'p' in trimmed_data else []
+	#spike_indices_do = detect_spikes(do, n1, n2, block) if detect_spikes_do and 'do' in trimmed_data else []
+	#spike_indices_p = detect_spikes(p, n1, n2, block) if detect_spikes_p and 'p' in trimmed_data else []
 	print("Outliers in t (despike):", spike_indices_t[:20])
 	print("Outliers in c (despike):", spike_indices_c[:20])
 
