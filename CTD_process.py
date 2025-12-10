@@ -121,7 +121,13 @@ if cnv:
     if data_start is None:
         raise ValueError("Could not detect start of numeric data block in the CNV file.")
 
-    df = pd.read_fwf(f"{directory}{filename}", skiprows=data_start)
+    df = pd.read_csv(f"{directory}{filename}", skiprows=data_start, sep='\s+', header=None)
+        # Verify alignment
+    for i in range(2):
+        print(lines[data_start + i].strip())
+        print(df.iloc[i].tolist())
+        print("---")
+    #df = pd.read_fwf(f"{directory}{filename}", skiprows=data_start)
 
     colnames = []
 
