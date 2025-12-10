@@ -43,8 +43,8 @@ def OrdinalToDatetime(ordinal):
 creator_name = "Shannon Nudds"; processor_name = creator_name
 creator_email = "shannon.nudds@dfo-mpo.gc.ca"; processor_email = creator_email
 # directory = f'./2022-2024/CTD/M2170_SN22954/'                         # directory of raw data file
-directory = f'./Barrow_RawData/'                         # directory of raw data file
-filename = 'M2170_SN22954.cnv'                      # filename
+directory = f'./Barrow_RawData/'     # directory of raw data file, change to: f'./'
+filename = 'M2170_SN22954.cnv'       # filename
 
 # Mission info
 year_n = 2022                                       # year of DEPLOYMENT
@@ -418,7 +418,7 @@ if time_offset:
 ###
 # *** if SLOWER/BEHIND than PC/true time, tot_drift is NEGATIVE; ***
 # *** if FASTER/AHEAD, this value POSITIVE (PC/true time + tot_drift = instrument time)***
-tot_drift = -44             # total clock drift from recovery time check, seconds.
+tot_drift = -46             # total clock drift from recovery time check, seconds.
 cnv_jd_drift = True         # True if .cnv file with Julian day time data, not corrected above
 datetime_drift = False      # True if datetime time data, or if corrected above
 
@@ -684,48 +684,29 @@ def detect_outliers(data1, data2, window_size, n, n0):
 	print(f"Array size: {len(outlier_inds)}")
 	print("Outlier test:", outlier_inds[:20])
 
-	Use_Lowpass = False
 	Make_Figure = True
-	if Use_Lowpass:
-		fs      = 1/sample_rate # Hz
-		cutoff  = 4e-4  # Cutoff frequency (Hz)
-		nyquist = 0.5 * fs
-		order   = 4
-		normal_cutoff = cutoff / nyquist
-		b, a = butter(order, normal_cutoff, btype='low', analog=False)
 
-		filtered1 = filtfilt(b, a, data1)
-		moving_std1 = pd.Series(data1).rolling(window=window_size, center=True).std(ddof=0)
-		z_score1 	= (data1 - filtered1)/moving_std1
-		spike_inds1 = np.where(np.abs(z_score1) > thresh_z)[0]
+	s1 = pd.Series(data1).astype(float)
+	k = 1.4826  # scale factor for Gaussian distribution
+	rolling_median1 = s1.rolling(window=2 * window_size + 1, center=True).median()
+	diff1 = np.abs(s1 - rolling_median1)
+	mad1 = s1.rolling(window=2 * window_size + 1, center=True) \
+		.apply(lambda x: np.median(np.abs(x - np.median(x))), raw=True)
+	threshold1 = n * k * mad1
+	spike_bins1 = diff1 > threshold1
+	spike_inds1 = np.where(spike_bins1.fillna(False).values)[0]
+	z_score1 = diff1 / threshold1
 
-		filtered2 = filtfilt(b, a, data2)
-		moving_std2 = pd.Series(data2).rolling(window=window_size, center=True).std(ddof=0)
-		z_score2 = (data2 - filtered2) / moving_std2
-		spike_inds2 = np.where(np.abs(z_score2) > thresh_z)[0]
-
-	else:
-		s1 = pd.Series(data1).astype(float)
-		k = 1.4826  # scale factor for Gaussian distribution
-		rolling_median1 = s1.rolling(window=2 * window_size + 1, center=True).median()
-		diff1 = np.abs(s1 - rolling_median1)
-		mad1 = s1.rolling(window=2 * window_size + 1, center=True) \
-			.apply(lambda x: np.median(np.abs(x - np.median(x))), raw=True)
-		threshold1 = n * k * mad1
-		spike_bins1 = diff1 > threshold1
-		spike_inds1 = np.where(spike_bins1.fillna(False).values)[0]
-		z_score1 = diff1 / threshold1
-
-		s2 = pd.Series(data2).astype(float)
-		k = 1.4826  # scale factor for Gaussian distribution
-		rolling_median2 = s2.rolling(window=2 * window_size + 1, center=True).median()
-		diff2 = np.abs(s2 - rolling_median2)
-		mad2 = s2.rolling(window=2 * window_size + 1, center=True) \
-			.apply(lambda x: np.median(np.abs(x - np.median(x))), raw=True)
-		threshold2 = n * k * mad2
-		spike_bins2 = diff2 > threshold2
-		spike_inds2 = np.where(spike_bins2.fillna(False).values)[0]
-		z_score2 = diff2 / threshold2
+	s2 = pd.Series(data2).astype(float)
+	k = 1.4826  # scale factor for Gaussian distribution
+	rolling_median2 = s2.rolling(window=2 * window_size + 1, center=True).median()
+	diff2 = np.abs(s2 - rolling_median2)
+	mad2 = s2.rolling(window=2 * window_size + 1, center=True) \
+		.apply(lambda x: np.median(np.abs(x - np.median(x))), raw=True)
+	threshold2 = n * k * mad2
+	spike_bins2 = diff2 > threshold2
+	spike_inds2 = np.where(spike_bins2.fillna(False).values)[0]
+	z_score2 = diff2 / threshold2
 
 
 	for i in range(1, len(outlier_inds)):
@@ -786,8 +767,8 @@ else:
 	# Run spike detection (as guidance only)
 	spike_indices_t = detect_spikes(t, n1, n2, block) if detect_spikes_t else []
 	spike_indices_c = detect_spikes(c, n1, n2, block) if detect_spikes_c else []
-	#spike_indices_do = detect_spikes(do, n1, n2, block) if detect_spikes_do and 'do' in trimmed_data else []
-	#spike_indices_p = detect_spikes(p, n1, n2, block) if detect_spikes_p and 'p' in trimmed_data else []
+	spike_indices_do = detect_spikes(do, n1, n2, block) if detect_spikes_do and 'do' in trimmed_data else []
+	spike_indices_p = detect_spikes(p, n1, n2, block) if detect_spikes_p and 'p' in trimmed_data else []
 	print("Outliers in t (despike):", spike_indices_t[:20])
 	print("Outliers in c (despike):", spike_indices_c[:20])
 
@@ -1072,7 +1053,7 @@ else:
 
 #%% 13D: Interactive T-S Plot with WHOCE QC flags (by Salinity Flag)
 # region
-
+###
 import plotly.graph_objects as go
 
 df = pd.DataFrame({
@@ -1144,16 +1125,15 @@ fig.update_layout(
 fig.show()
 
 # endregion
-
+###
 #%% Section 14: Conductivity Offset
 # SHN \/\/\/ Consider removing plot and printing pre and post correction linear slope.
 
 # region
 
-###
+
 c0_offset = 1.0000          # multiplier at start of record
 c_offset = 1.0000           # multiplier at end of record
-###
 
 c_offset_arr = np.linspace(c0_offset, c_offset, len(dt))
 print('---')
@@ -1185,13 +1165,13 @@ print('---')
 note(f"Conductivity offset applied (c0_offset={c0_offset}, c_offset={c_offset})")
 
 # endregion
-
+###
 #%% Section 15: Derive Quantities from Temperature and Salinity
 # salinity is derived from T and C above for the T/S plots.
 SA = gsw.SA_from_SP(s_adj, p, lon, lat)  # absolute salinity (g/kg) for gsw calculations
 pt = gsw.pt0_from_t(SA, t, p)   # potential temperature at p = 0 db
 svel = gsw.sound_speed_t_exact(SA, t, p)  # sound speed in seawater
-
+###
 #%%Section 16: Derive Flags for PT and SVEL from Component Variables
 def combine_flags(*flag_arrays):
     """Return the highest (worst) flag value at each index."""
@@ -1241,7 +1221,8 @@ reshape = lambda arr: arr.reshape(-1, 1)
 # Convert datetime array to seconds since epoch
 epoch = dtmod.datetime(1970, 1, 1)
 time_seconds = np.array([(d - epoch).total_seconds() for d in dt])
-
+delta_seconds = float(time_seconds[-1] - time_seconds[0])
+time_coverage_duration   = isodate.duration_isoformat(dtmod.timedelta(seconds=delta_seconds))
 # Build dataset adaptively
 data_vars = {}
 
