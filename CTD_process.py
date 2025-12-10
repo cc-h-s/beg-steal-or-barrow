@@ -970,7 +970,7 @@ else:
     )
 
     #plt.show()
-	plt.savefig("qc_flags_plot.png", dpi=150)
+plt.savefig("qc_flags_plot.png", dpi=150)
 
 note("WHOCE QC flags created for all available variables")
 
@@ -1056,6 +1056,7 @@ else:
 # endregion
 
 #%% 13D: TS plot omitting flag 4 data from view
+    #fig.write_html(f'{directory}{site}{year_str}{mooring}{pres}_{serial}_ManualSpikeReview.html')
 
 #%% 13D: Interactive T-S Plot with WHOCE QC flags (by Salinity Flag)
 # region
