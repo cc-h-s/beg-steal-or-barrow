@@ -144,26 +144,59 @@ if cnv:
 
     data = df
     raw_keys = df.columns.tolist()
-
 elif asc:
-    # Load ASCII files using np.genfromtxt
-    dtype = [
-        ('temperature', 'f8'),
-        ('conductivity', 'f8'),
-        ('pressure', 'f8'),
-        ('dates', 'U19'),
-        ('times', 'U19')
-    ]
-    data_array = np.genfromtxt(
-        f"{directory}{filename}",
-        skip_header=0,
-        delimiter=",",
-        dtype=dtype,
-        encoding="utf-8"
-    )
+	with open(f"{directory}{filename}", "r") as f:
+		lines = f.readlines()
 
-    data = pd.DataFrame(data_array)
-    raw_keys = ['temperature', 'conductivity', 'pressure', 'dates', 'times']
+	data_start = None
+	for i, line in enumerate(lines):
+		s = line.strip()
+		if s and (s[0].isdigit() or s[0] == "-"):
+			data_start = i
+			break
+
+	if data_start is None:
+		raise ValueError("Could not detect start of numeric data in ASC file.")
+
+	data = pd.read_csv(
+		f"{directory}{filename}",
+		skiprows=data_start,
+		header=None,
+		names=['temperature', 'conductivity', 'pressure', 'dates', 'times']
+	)
+
+	# ✅ FIX 1: Clean whitespace
+	data['dates'] = data['dates'].astype(str).apply(lambda x: " ".join(x.split()))
+	data['times'] = data['times'].astype(str).apply(lambda x: " ".join(x.split()))
+
+	# ✅ FIX 2: Build datetime column
+	data['datetime'] = pd.to_datetime(
+		data['dates'] + " " + data['times'],
+		format="%d %b %Y %H:%M:%S",
+		errors='coerce'
+	)
+
+# elif asc:
+#     # Load ASCII files using np.genfromtxt
+#     dtype = [
+#         ('temperature', 'f8'),
+#         ('conductivity', 'f8'),
+#         ('pressure', 'f8'),
+#         ('dates', 'U19'),
+#         ('times', 'U19')
+#     ]
+#     data_array = np.genfromtxt(
+#         f"{directory}{filename}",
+#         skip_header=0,
+#         delimiter=",",
+#         dtype=dtype,
+#         encoding="utf-8"
+#     )
+#
+#     data = pd.DataFrame(data_array)
+
+
+	raw_keys = ['temperature', 'conductivity', 'pressure', 'dates', 'times']
 
 else:
     raise ValueError("Unsupported file type. Must be CNV or ASC.")
