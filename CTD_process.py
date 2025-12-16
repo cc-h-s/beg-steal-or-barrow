@@ -79,7 +79,7 @@ sdn_device_id = "SDN:L05::350, SDN:L05::134, SDN:L05::WPS"      # SDN-L05 vocabu
 
 # program and project info
 project = "Barrow Strait Monitoring and Real Time Observatory Project"
-program = "Maritimes Region Barrow Straight Monitoring Program"
+program = "Maritimes Region Barrow Strait Monitoring Program"
 location = "Barrow Strait"
 country = "SDN:C32::CA, SDN:C18::18"  # !                       # SDN C32 vocabulary, CA = CANADA
 country_code = "1810"                 # !                       # 1810 = CANADA
