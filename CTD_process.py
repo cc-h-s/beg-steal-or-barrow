@@ -40,8 +40,8 @@ def OrdinalToDatetime(ordinal):
 
 #%%Section 2: Metadata
 ###
-creator_name = "Shannon Nudds"; processor_name = creator_name
-creator_email = "shannon.nudds@dfo-mpo.gc.ca"; processor_email = creator_email
+creator_name = "Carmen Holmes-Smith"; processor_name = creator_name
+creator_email = "carmen.holmes-smith@dfo-mpo.gc.ca"; processor_email = creator_email
 # directory = f'./2022-2024/CTD/M2170_SN22954/'                         # directory of raw data file
 directory = f'./Barrow_RawData/'     # directory of raw data file, change to: f'./'
 filename = 'M2170_SN22954.cnv'       # filename
@@ -210,6 +210,7 @@ var_map = {
     'tv290C': 't',          # Temperature
     'cond0S/m': 'c',        # Conductivity
     'prdM': 'p',            # Pressure
+	'sbeopoxML/L': 'do',	# Oxygen mL/L
     'timeJV2': 'time',      # CNV Time
     'temperature': 't',     # ASC Temperature
     'conductivity': 'c',    # ASC Conductivity
@@ -232,6 +233,7 @@ t = vars_dict.get('t')
 c = vars_dict.get('c')
 p = vars_dict.get('p')
 time = vars_dict.get('time')
+do = vars_dict.get('do') if 'do' in vars_dict else None
 
 # --- ASC time conversion ---
 if asc and 'dates' in raw_keys and 'times' in raw_keys:
@@ -773,8 +775,8 @@ else:
 	# Run spike detection (as guidance only)
 	spike_indices_t = detect_spikes(t, n1, n2, block) if detect_spikes_t else []
 	spike_indices_c = detect_spikes(c, n1, n2, block) if detect_spikes_c else []
-	spike_indices_do = detect_spikes(do, n1, n2, block) if detect_spikes_do and 'do' in trimmed_data else []
-	spike_indices_p = detect_spikes(p, n1, n2, block) if detect_spikes_p and 'p' in trimmed_data else []
+	spike_indices_do = detect_spikes(do, n1, n2, block) if detect_spikes_do else []
+	spike_indices_p = detect_spikes(p, n1, n2, block) if detect_spikes_p else []
 	print("Outliers in t (despike):", spike_indices_t[:20])
 	print("Outliers in c (despike):", spike_indices_c[:20])
 
@@ -939,37 +941,37 @@ if not flagged_vars:
 else:
 
 # SHN \/\/\/ edit for efficiency in plotting:
-    #fig, axes = plt.subplots(len(flagged_vars), 1, figsize=(12, 3 * len(flagged_vars)), sharex=True)
-    fig, axes = plt.subplots(len(flagged_vars), 1, figsize=(10, min(3 * len(flagged_vars), 12)), sharex=True)
-    #fig.subplots_adjust(hspace=0.2)
+	# fig, axes = plt.subplots(len(flagged_vars), 1, figsize=(12, 3 * len(flagged_vars)), sharex=True)
+	fig, axes = plt.subplots(len(flagged_vars), 1, figsize=(10, min(3 * len(flagged_vars), 12)), sharex=True)
+	# fig.subplots_adjust(hspace=0.2)
 	plt.tight_layout()
 
-    if len(flagged_vars) == 1:
-        axes = [axes]
+	if len(flagged_vars) == 1:
+		axes = [axes]
 
-    for i, (label, data_var, flags) in enumerate(flagged_vars):
-        ax = axes[i]
-        ax.plot(data_var, color='black', lw=1)
-        ax.set_ylabel(label)
+	for i, (label, data_var, flags) in enumerate(flagged_vars):
+		ax = axes[i]
+		ax.plot(data_var, color='black', lw=1)
+		ax.set_ylabel(label)
 
-        for flag_value, color in flag_colors.items():
-            idx = np.where(flags == flag_value)[0]
-            if len(idx) > 0:
-                ax.scatter(idx, data_var[idx], color=color, s=8)
+		for flag_value, color in flag_colors.items():
+			idx = np.where(flags == flag_value)[0]
+			if len(idx) > 0:
+				ax.scatter(idx, data_var[idx], color=color, s=8)
 
-    axes[-1].set_xlabel("Index")
-    plt.suptitle("QC Flags Applied (WHOCE Scheme)", fontsize=16)
-    fig.subplots_adjust(top=0.9, bottom=0.15)
+	axes[-1].set_xlabel("Index")
+	plt.suptitle("QC Flags Applied (WHOCE Scheme)", fontsize=16)
+	fig.subplots_adjust(top=0.9, bottom=0.15)
 
-    fig.legend(
-        flag_labels.values(),
-        loc='lower center',
-        bbox_to_anchor=(0.5, -0.05),
-        ncol=len(flag_labels),
-        fontsize=12
-    )
+	fig.legend(
+		flag_labels.values(),
+		loc='lower center',
+		bbox_to_anchor=(0.5, -0.05),
+		ncol=len(flag_labels),
+		fontsize=12
+	)
 
-    #plt.show()
+# plt.show()
 plt.savefig("qc_flags_plot.png", dpi=150)
 
 note("WHOCE QC flags created for all available variables")
@@ -1602,7 +1604,7 @@ print(f"✔ Adaptive NetCDF file saved: {output_path}")
 ##
 #%% Section 20: COMPUTE MEAN PRESSURE AND SAMPLE RATE ---
 # SHN -- maybe redundant -- TBD
-mean_pressure = ds_nc.p.mean().item()
+mean_pressure = np.mean(p)
 print(f'Mean Pressure: {mean_pressure:.2f} db')
 time_diff = np.diff(dt)  #Time differences between consecutive timestamps
 time_diff_seconds = np.array([td.total_seconds() for td in time_diff])  #Convert to seconds
