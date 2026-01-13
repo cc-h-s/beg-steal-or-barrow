@@ -40,8 +40,8 @@ def OrdinalToDatetime(ordinal):
 
 #%%Section 2: Metadata
 ###
-creator_name = "Carmen Holmes-Smith"; processor_name = creator_name
-creator_email = "carmen.holmes-smith@dfo-mpo.gc.ca"; processor_email = creator_email
+creator_name = "Shannon Nudds"; processor_name = "Carmen Holmes-Smith"
+creator_email = "shannon.nudds@dfo-mpo.gc.ca"; processor_email = "carmen.holmes-smith@dfo-mpo.gc.ca"
 # directory = f'./2022-2024/CTD/M2170_SN22954/'                         # directory of raw data file
 directory = f'./Barrow_RawData/'     # directory of raw data file, change to: f'./'
 filename = 'M2170_SN22954.cnv'       # filename
@@ -64,7 +64,7 @@ sdn_platform_id = "SDN:L06::48, SDN:L06::43"  # !   # SDN-L06 vocabulary #EX. 48
 
 # subsite = mooring                                 # no subsite for Barrow Strait [FROM KURTIS: set to '' for single mooring sites, or '-1' etc. for multiple mooring sites, e.g. QN2024-2]
 corr_water_depth = 256                              # in metres, computed from sounding
-pres = ' '                                          # '_34m' if one of multiple instruments on line mooring
+pres = ''                                          # '_34m' if one of multiple instruments on line mooring
 # offbottom_depth = " "                             # computed later
 
 # instrument (aka device) details
@@ -72,7 +72,7 @@ data_type = "moored CTD"    # !                     # data type (for netcdf, eg.
 instrument_type = "MCTD"    # !                     # short form (eg. MCTD)
 inst_type = "Microcat"      # !                     # instrument type (for netcdf, eg. Microcat)
 instrument_model = "SBE37-SM"                       # instrument model, eg. SBE37-SM, SBE37-SMP, SBE37-SMP-ODO
-serial = 'SN22954';                                 # instrument serial number (if included in filename)
+serial = 'SN22954'                                  # instrument serial number (if included in filename)
 serial_number = serial[2:]  # !
 sdn_instrument_id = "SDN:L22::TOOL1456"                         # SDN:L22::TOOL1456 vocabulary #EX. TOOL1456 = "Sea-Bird SBE 37 MicroCat SM-CTP (submersible) CTD sensor"
 sdn_device_id = "SDN:L05::350, SDN:L05::134, SDN:L05::WPS"      # SDN-L05 vocabulary: https://vocab.seadatanet.org/search #EX. 350 = CTD, 134 = water temperature sensor, WPS = Water Pressure Sensor
