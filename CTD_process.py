@@ -47,9 +47,9 @@ def OrdinalToDatetime(ordinal):
 
 # %%Section 2: Metadata
 ###
-creator_name = "Shannon Nudds";
+creator_name = "Shannon Nudds"
+creator_email = "shannon.nudds@dfo-mpo.gc.ca"
 processor_name = "Carmen Holmes-Smith"
-creator_email = "shannon.nudds@dfo-mpo.gc.ca";
 processor_email = "carmen.holmes-smith@dfo-mpo.gc.ca"
 # directory = f'./2022-2024/CTD/M2170_SN22954/'                         # directory of raw data file
 directory = f'./Barrow_RawData/'  # directory of raw data file, change to: f'./'
@@ -815,7 +815,7 @@ def hampel_indices(series, window_size=5, n=3):
     return np.where(outliers.fillna(False).values)[0]
 
 
-if Use_CHS_Func and not Use_CHS_outlier:
+if Use_CHS_Func:
     window_size = 50
     n = 9
     spike_indices_t = hampel_indices(t, window_size, n) if detect_spikes_t else []
