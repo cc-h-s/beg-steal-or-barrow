@@ -695,7 +695,9 @@ detect_spikes_do = False  # Optional: Detect in DO
 detect_spikes_p = False   # Optional: Detect in Pressure
 #
 #region
-Use_CHS_Func = False # Function I prefer to use to suggest flags
+Use_CHS_Func = False # Uses Hampel detection to suggest outliers
+Use_CHS_outlier = False # Detects outliers from scatter plot
+
 #sample_rate = 900
 # Spike detection parameters
 if sample_rate == 900:
@@ -791,7 +793,7 @@ def hampel_indices(series, window_size=5, n=3):
     outliers = diff > threshold
     return np.where(outliers.fillna(False).values)[0]
 
-if Use_CHS_Func:
+if Use_CHS_Func and not Use_CHS_outlier:
 	window_size = 50
 	n = 9
 	spike_indices_t  = hampel_indices(t, window_size, n) if detect_spikes_t else []
@@ -799,7 +801,7 @@ if Use_CHS_Func:
 	spike_indices_do = hampel_indices(do, window_size, n) if detect_spikes_t else []
 	spike_indices_p  = hampel_indices(p, window_size, n) if detect_spikes_c else []
 
-	if detect_spikes_t and detect_spikes_c:
+	if detect_spikes_t and detect_spikes_c and Use_CHS_outlier:
 		n0 = 4
 		spike_indices_t, spike_indices_c = detect_outliers(t, c, window_size, n, n0)
 	print("Outliers in t:", spike_indices_t[:20])
