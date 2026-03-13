@@ -13,10 +13,10 @@
 4. In section 9B:
      * Choose trim indices by using the figure generated in Section 9A
      * Change start and finish fields accordingly
-     * ★ because original variable is trimmed in this step (`t = t[start:finish]`), if you want to change trim indices after you've already trimmed it's reccomended to start again at Section 1
+     * ★ because original variables are trimmed in this step (`t = t[start:finish]`), if you want to change trim indices after you've already trimmed, start again at Section 1
 5. Section 13: 
      * Select which variables are to be flagged (e.g. `flag_c = True` if conductivity should be flagged)
-     * Using the figures created to identify erroneous points, manually enter each index to be flagged and it's corresponding WHOCE flag
+     * Using the figures created to identify erroneous points, manually enter each index to be flagged and it's corresponding WOCE flag
 6. Section 19:
      * Add notes if needed in `"comment": ""` line of global attributes field
 
