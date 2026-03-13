@@ -38,10 +38,21 @@
      * ★ because original variables are trimmed in this step (`t = t[start:finish]`), if you want to change trim indices after you've already trimmed, start again at Section 1.
 10. Temperature Salinity Plot
 11. Temperature Salinity Plot (Interactive) 
-12. Manual Data Inspection
+12 A. Manual Data Inspection
      * Spike data suggestions. Default is the despike function from ctd toolbox but this performs poorly and may not be suitable for our data (e.g. the 'block' parameter is supposed to be the expected length of spikes, theoretically 1 or 2, yet is set to 200). This filter also crashes with large datasets. Can still be used if Use_CHS_Func = False
      * Use_CHS_Func = True will use a Hampel filter to suggest outliers. This filter uses a rolling median and rolling median absolute deviation (MAD) to identify outliers.
      * The most accurate hampel filter is very slow for large datasets, so hampel_fast was added and will automatically run on variables longer than 200,000 points (this can be customized). The difference between the two is how MAD is calculated, the original is exact and the fast version uses an approximation.
      * The majority of "spikes" are single outliers that occur with sharp changes observed (more commonly in conductivity than temperature, often negative). Narrow windows are preferred to identify these spikes, often caused by air bubbles or electrical noise.
      * For setting the n, values of 3-4 are typical, and n > 5 is conservative (less flags). If you are finding that the filter is flagging too many points even when n is set high, the problem is that there is too little variability across some periods of the timeseries and MAD becomes extremely small. There is a floor_mad variable included that sets a minimum for MAD and prevents it from collapsing. If n is already high, try increasing this value to get a more reasonable number of flags. 
-   
+12 B. Flagging
+     * All flags are recorded here for measured variables temperature, conductivity, pressure, and oxygen. Derived variables inherit relevant flags.
+13. Plots
+14. Conductivity Offset
+     * Updated to improve processing note. Set cond_offset to False and c_offset to 1 if no CTD data available for comparison. 
+15. Derive Quantities from Temperature and Salinity
+16. pt and svel derive flags from component variables
+17. Compute Pressure to calculate instrument depth
+     * Instrument depth was originally recorded just as mean p, now calculated using the median of pressure and latitude.
+18. Create Objects for NetCDF
+     * This section calculates variable min and max recorded in metadata by excluding all flagged variables.
+     * The second part of this section is for recording mooring movement during the deployment. If the mooring moved (evident from pressure timeseries reviewed in flagging section), set Mooring_Move to True and change the index of the shift accordingly. If numerous data were distorted during this shift, change index_impact to the approximate length of bad data. Intrument depth is then calculated for before and after the shift and recorded in the processing notes along with the date of the shift. The very last note in the section is for any additional notes about why the mooring moved (suspected causes, known recovery for maintenance, etc.) 
