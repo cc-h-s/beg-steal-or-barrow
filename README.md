@@ -19,7 +19,7 @@
      * Add notes if needed in `"comment": ""` line of global attributes field
 
 # Detailed section notes 
-1. Import Packages - self explanatory 
+1. Import Packages
 2. Metadata 
 3. Load Raw Data
      * ctd processing package does not recognize all header keys (i.e. prdM). Code added so that headers aren't missed, but check that all      expected raw keys are being read correctly in this section.
