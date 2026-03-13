@@ -1,4 +1,4 @@
-# Load mooring CTD data and process. Code produced by Kurtis Anstey, Shannon Nudds, and Annie Howard
+# Load mooring CTD data and process. Code produced by Kurtis Anstey, Shannon Nudds, Annie Howard, and Carmen Holmes-Smith
 ### = Sections that require input from the user
 
 # %%Section 1: Imports
@@ -563,7 +563,7 @@ print("Detected time format:",
 # *** if SLOWER/BEHIND than PC/true time, tot_drift is NEGATIVE; ***
 # *** if FASTER/AHEAD, this value POSITIVE (PC/true time + tot_drift = instrument time)***
 
-
+Drift_Recorded = True # Added seperate case for when clock drift not recorded vs truly 0 -chs
 tot_drift = -46  # total clock drift from recovery time check, seconds.
 cnv_jd_drift = True  # True if .cnv file with Julian day time data, not corrected above
 datetime_drift = False  # True if datetime time data, or if corrected above
@@ -624,8 +624,11 @@ if datetime_drift:
 if not cnv_jd_drift and not datetime_drift:
     dn_dt = time.copy()
 
-note(f"Clock drift setting tot_drift={tot_drift} s "
+if Drift_Recorded:
+    note(f"Clock drift setting tot_drift={tot_drift} s "
      f"via {'JD' if cnv_jd_drift else 'datetime' if datetime_drift else 'none'} method")
+else:
+    note(f"Clock drift not recorded, no correction made. ")
 
 # endregion
 ###
@@ -1367,7 +1370,7 @@ if flag_svel:
 no_pressure_sensor = False  # True is no pressure sensor
 
 if no_pressure_sensor:
-    round_p = 108  # constant pressure value if no pressure sensor
+    round_p = 10000  # constant pressure value if no pressure sensor
     p0 = round_p
     inst_depth = 100000
 else:
@@ -1444,12 +1447,13 @@ time_coverage_resolution = isodate.duration_isoformat(dtmod.timedelta(seconds=sa
 Mooring_Move = False
 
 if Mooring_Move:
-    index_shift = 68072
+    index_shift = 68072 # first index impacted
+    index_impact = 1
 
     p0 = np.nanmedian(p[:index_shift-1])
     inst_depth = float(-gsw.z_from_p(p0, lat))
     offbottom_depth = corr_water_depth - inst_depth
-    p0_shift = np.nanmedian(p[index_shift+1:])
+    p0_shift = np.nanmedian(p[index_shift+index_impact:])
     inst_depth_shift = float(-gsw.z_from_p(p0_shift, lat))
 
     date_of_shift = dt[index_shift]
@@ -1892,7 +1896,7 @@ print(f"✔ Adaptive NetCDF file saved: {output_path}")
 # SHN -- maybe redundant -- TBD
 mean_pressure = np.mean(p)
 print(f'Mean Pressure: {mean_pressure:.2f} db')
-print(f'Depth Calculated: {inst_depth:.2f} db')
+print(f'Depth Calculated: {inst_depth:.2f} m')
 time_diff = np.diff(dt)  # Time differences between consecutive timestamps
 time_diff_seconds = np.array([td.total_seconds() for td in time_diff])  # Convert to seconds
 computed_sample_rate = np.mean(time_diff_seconds)
