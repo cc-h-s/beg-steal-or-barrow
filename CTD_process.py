@@ -1,4 +1,4 @@
-# Load mooring CTD data and process. Code produced by Kurtis Anstey, Shannon Nudds, and Annie Howard
+# Load mooring CTD data and process. Code produced by Kurtis Anstey, Shannon Nudds, Annie Howard, and Carmen Holmes-Smith
 ### = Sections that require input from the user
 
 # %%Section 1: Imports
@@ -47,13 +47,11 @@ def OrdinalToDatetime(ordinal):
 
 # %%Section 2: Metadata
 ###
-creator_name = "Shannon Nudds";
-processor_name = "Carmen Holmes-Smith"
-creator_email = "shannon.nudds@dfo-mpo.gc.ca";
-processor_email = "carmen.holmes-smith@dfo-mpo.gc.ca"
-# directory = f'./2022-2024/CTD/M2170_SN22954/'                         # directory of raw data file
+creator_name = "Clark Richards"
+creator_email = "Clark.Richards@dfo-mpo.gc.ca"
+
 directory = f'./Barrow_RawData/'  # directory of raw data file, change to: f'./'
-filename = 'M2170_SN22954.cnv'  # filename
+filename = 'M2170_SN22954.cnv'
 
 # Mission info
 year_n = 2022  # year of DEPLOYMENT
@@ -66,15 +64,15 @@ site = 'BS-SOUTH-CENTRAL'  # mooring site (eg. BS-SOUTH, BS-SOUTH-CENTRAL, etc.)
 # mooring (aka platform) details
 mooring = 'M2170'  # mooring number; set to '' for single mooring sites, or '-1' etc. for multiple mooring sites, e.g. QN2024-2
 mooring_number = mooring[1:]  # !
-latdeg = 74;
-latdec = 12.573  # latitude in degrees and decimal minutes
-londeg = 90;
-londec = 49.641  # longitude in degrees and decimal minutes
+latdeg = 74
+latdec = 11.874  # latitude in degrees and decimal minutes
+londeg = 90
+londec = 49.038  # longitude in degrees and decimal minutes
 platform = "mooring"  # !                   #
 sdn_platform_id = "SDN:L06::48, SDN:L06::43"  # !   # SDN-L06 vocabulary #EX. 48 = mooring, 43 = subsurface mooring
 
 # subsite = mooring                                 # no subsite for Barrow Strait [FROM KURTIS: set to '' for single mooring sites, or '-1' etc. for multiple mooring sites, e.g. QN2024-2]
-corr_water_depth = 256  # in metres, computed from sounding
+corr_water_depth = 259  # in metres, computed from sounding
 pres = ''  # '_34m' if one of multiple instruments on line mooring
 # offbottom_depth = " "                             # computed later
 
@@ -82,11 +80,9 @@ pres = ''  # '_34m' if one of multiple instruments on line mooring
 data_type = "moored CTD"  # !                     # data type (for netcdf, eg. moored CTD)
 instrument_type = "MCTD"  # !                     # short form (eg. MCTD)
 inst_type = "Microcat"  # !                     # instrument type (for netcdf, eg. Microcat)
-instrument_model = "SBE37-SM"  # instrument model, eg. SBE37-SM, SBE37-SMP, SBE37-SMP-ODO
+instrument_model = "SBE37-SM"  # instrument model, eg. SBE37-SM, SBE37-SMP, SBE37-SMP-ODO, RBR Solo, RBR Concerto
 serial = 'SN22954'  # instrument serial number (if included in filename)
 serial_number = serial[2:]  # !
-sdn_instrument_id = "SDN:L22::TOOL1456"  # SDN:L22::TOOL1456 vocabulary #EX. TOOL1456 = "Sea-Bird SBE 37 MicroCat SM-CTP (submersible) CTD sensor"
-sdn_device_id = "SDN:L05::350, SDN:L05::134, SDN:L05::WPS"  # SDN-L05 vocabulary: https://vocab.seadatanet.org/search #EX. 350 = CTD, 134 = water temperature sensor, WPS = Water Pressure Sensor
 
 # program and project info
 project = "Barrow Strait Monitoring and Real Time Observatory Project"
@@ -110,6 +106,26 @@ latstr = f'{latdeg} {latdec}'
 lon = round((-(londeg + londec / 60)), ndigits=6);
 lonstr = f'{-londeg} {londec}'
 
+if instrument_model == "SBE37-SM" or instrument_model == "SBE37-SMP":
+    sdn_instrument_id = "SDN:L22::TOOL1456"
+    sdn_device_id = "SDN:L05::350, SDN:L05::130, SDN:L05::134, SDN:L05::WPS"
+elif instrument_model == "SBE37-SMP-ODO" or instrument_model == "SBE37-SMP-DO":
+    sdn_instrument_id = "SDN:L22::TOOL1456"
+    sdn_device_id = "SDN:L05::350, SDN:L05::130, SDN:L05::134, SDN:L05::WPS, SDN:L05::351"
+elif instrument_model == "RBR Solo":
+    sdn_instrument_id = "SDN:L22::TOOL1872"
+    sdn_device_id = "SDN:L05::134"
+elif instrument_model == "RBR Duet":
+    sdn_instrument_id = "SDN:L22::TOOL1873"
+    sdn_device_id = "SDN:L05::134, SDN:L05::WPS"
+elif instrument_model == "RBR Concerto":
+    sdn_instrument_id = "SDN:L22::TOOL1874"
+    sdn_device_id = "SDN:L05::350, SDN:L05::130, SDN:L05::134, SDN:L05::WPS"
+else:
+    # None of the known instruments — manual entry SDN-L05 vocabulary: https://vocab.seadatanet.org/search
+    sdn_instrument_id = ""
+    sdn_device_id = ""
+
 # endregion
 
 # %%Section 3: Load raw data
@@ -117,6 +133,8 @@ lonstr = f'{-londeg} {londec}'
 # region
 cnv = filename.endswith(".cnv")
 asc = filename.endswith(".asc")
+is_rsk = filename.endswith(".rsk") #pyrsktools loaded as 'rsk', so flag is changed to is_rsk
+
 data = None
 raw_keys = []
 available_vars = []
@@ -153,10 +171,6 @@ if cnv:
 
     df.columns = colnames[:len(df.columns)]
 
-    # print("Raw keys detected:", df.columns)
-    # df.columns = ["tv290C", "cond0S/m", "prdM", "timeJV2", "flag"]
-    # print("Raw keys detected:", df.columns)
-
     data = df
     raw_keys = df.columns.tolist()
 elif asc:
@@ -180,40 +194,50 @@ elif asc:
         names=['temperature', 'conductivity', 'pressure', 'dates', 'times']
     )
 
-    # ✅ FIX 1: Clean whitespace
+    # Clean whitespace
     data['dates'] = data['dates'].astype(str).apply(lambda x: " ".join(x.split()))
     data['times'] = data['times'].astype(str).apply(lambda x: " ".join(x.split()))
 
-    # ✅ FIX 2: Build datetime column
+    # Build datetime column
     data['datetime'] = pd.to_datetime(
         data['dates'] + " " + data['times'],
         format="%d %b %Y %H:%M:%S",
         errors='coerce'
     )
 
-    # elif asc:
-    #     # Load ASCII files using np.genfromtxt
-    #     dtype = [
-    #         ('temperature', 'f8'),
-    #         ('conductivity', 'f8'),
-    #         ('pressure', 'f8'),
-    #         ('dates', 'U19'),
-    #         ('times', 'U19')
-    #     ]
-    #     data_array = np.genfromtxt(
-    #         f"{directory}{filename}",
-    #         skip_header=0,
-    #         delimiter=",",
-    #         dtype=dtype,
-    #         encoding="utf-8"
-    #     )
-    #
-    #     data = pd.DataFrame(data_array)
-
     raw_keys = ['temperature', 'conductivity', 'pressure', 'dates', 'times']
+# -----------------------------
+# 3.3 RSK FILES (using pyrsktools)
+# -----------------------------
+elif is_rsk:
+    from pyrsktools import RSK
+    rsk = RSK(f"{directory}{filename}")
+    rsk.open()
+    rsk.readdata()
+
+    if rsk.data is None or len(rsk.data) == 0:
+        raise RuntimeError("RSK file contains no data.")
+
+    # df_raw is EXACTLY what came from the instrument
+    df_raw = pd.DataFrame.from_records(rsk.data).copy()
+
+    # df_proc is used for processing only
+    df_proc = df_raw.copy()
+
+    # Convert timestamp ONLY in df_proc
+    if 'timestamp' in df_proc.columns:
+        df_proc['timestamp'] = pd.to_datetime(df_proc['timestamp'], errors='coerce')
+        df_proc['timestamp'] = df_proc['timestamp'].dt.to_pydatetime()
+    else:
+        raise RuntimeError("RSK file missing timestamp column")
+
+    # Save raw keys from df_raw (not df_proc)
+    data = df_proc          # used for Section 5 and processing
+    raw_data = df_raw       # used for saving raw NetCDF
+    raw_keys = df_raw.columns.tolist()
 
 else:
-    raise ValueError("Unsupported file type. Must be CNV or ASC.")
+    raise ValueError("Unsupported file type. Must be CNV, ASC, or RSK")
 
 print("Raw keys detected:", raw_keys)
 
@@ -234,11 +258,50 @@ elif asc:
     raw_ds['dates'] = (['time'], data['dates'].values)
     raw_ds['times'] = (['time'], data['times'].values)
 
+elif is_rsk:
+    # Get all field names from the structured array
+    dtype_fields = set(rsk.data.dtype.names)
+
+    for ch in rsk.channels:
+        # Try all possible attribute names that might match dtype fields
+        candidates = [
+            ch.longName,
+            ch.shortName,
+            ch.label,
+            getattr(ch, "_dbName", None),
+            ch.longName.lower(),
+            ch.shortName.lower(),
+            ch.label.lower(),
+        ]
+
+        # Pick the first candidate that exists in the dtype
+        field = next((c for c in candidates if c in dtype_fields), None)
+
+        if field is None:
+            print(f"⚠ Warning: No matching data field found for channel '{ch.longName}'")
+            continue
+
+        # Clean variable name for NetCDF
+        varname = ch.longName.replace(" ", "_").replace("/", "_")
+
+        # Add to dataset
+        raw_ds[varname] = (['time'], rsk.data[field])
+
+    # Add timestamp if present
+    if 'timestamp' in dtype_fields:
+        raw_ds['datetime'] = (
+            ['time'],
+            rsk.data['timestamp'].astype('datetime64[ns]')
+        )
+
+
 raw_ds.attrs['source_file'] = filename
 raw_ds.attrs['description'] = 'Raw instrument data (no QC, no corrections)'
-raw_ds.attrs['comment'] = 'Converted from CNV or ASC to NetCDF'
+raw_ds.attrs['comment'] = 'Converted from CNV or ASC or RSK to NetCDF'
 
-raw_output_path = f"{directory}{filename.replace('.cnv', '_raw.nc').replace('.asc', '_raw.nc')}"
+# ---- Output path ----
+raw_output_path = ( f"{directory}" 
+                    f"{filename.replace('.cnv', '_raw.nc').replace('.asc', '_raw.nc').replace('.rsk', '_raw.nc')}" )
 # raw_nc_name = f"{directory}{filename}_RAW.nc"
 # raw_ds.to_netcdf(raw_nc_name)
 # print(f"Saved RAW NetCDF → {raw_nc_name}")
@@ -251,6 +314,12 @@ print(f"Saved RAW NetCDF → {raw_output_path}")
 # region
 
 data_ = data.copy()
+# --- Convert RSK datetime64 to Python datetime for processing only ---
+if is_rsk:
+    data_ = data_.copy()  # ensure we don't modify the raw DataFrame
+    data_['timestamp'] = pd.to_datetime(data_['timestamp'], errors='coerce')
+    data_['timestamp'] = data_['timestamp'].dt.to_pydatetime()
+
 do = None
 # Standard variable mapping
 var_map = {
@@ -263,24 +332,34 @@ var_map = {
     'conductivity': 'c',  # ASC Conductivity
     'pressure': 'p',  # ASC Pressure
     'dates': 'dates',  # ASC Dates
-    'times': 'times'  # ASC Times
+    'times': 'times',  # ASC Times
+    'timestamp': 'time' # RSK Times
 }
 
 vars_dict = {}
 available_vars = []
 
+
 for raw_var, new_var in var_map.items():
     if raw_var in raw_keys:
         print(raw_var)
+        #vars_dict[new_var] = data_[raw_var].to_numpy(dtype=object)
         vars_dict[new_var] = data_[raw_var].values
         available_vars.append(new_var)
 
 # Core variables
-t = vars_dict.get('t')
-c = vars_dict.get('c')
-p = vars_dict.get('p')
+t = vars_dict.get('t') if 't' in vars_dict else None
+c = vars_dict.get('c') if 'c' in vars_dict else None
+p = vars_dict.get('p') if 'p' in vars_dict else None
 time = vars_dict.get('time')
 do = vars_dict.get('do') if 'do' in vars_dict else None
+
+# --- Convert RBR abs p to sea p, same way Seabird does ---
+if is_rsk and p is not None:
+    # Subtract standard atmospheric pressure: 10.1325 dbar
+    p = p - 10.1325
+    # Prevent negative values
+    p[p < 0] = 0
 
 # --- ASC time conversion ---
 if asc and 'dates' in raw_keys and 'times' in raw_keys:
@@ -295,8 +374,12 @@ if asc and 'dates' in raw_keys and 'times' in raw_keys:
         for dt_obj in time
     ])
 
+
 print("Available variables:", available_vars)
 print("t/c/p/time shapes:", [v.shape for v in [t, c, p, time] if v is not None])
+
+print("Before drift: type(time[0]) =", type(time[0]))
+
 
 # endregion
 ###
@@ -473,10 +556,14 @@ if time_offset:
 # endregion
 
 # %%Section 8: Correct for clock drift
-
+print("Detected time format:",
+      "Julian Day → set cnv_jd_drift=True" if isinstance(time[0], (int, float, np.floating))
+      else "datetime → set datetime_drift=True")
 ###
 # *** if SLOWER/BEHIND than PC/true time, tot_drift is NEGATIVE; ***
 # *** if FASTER/AHEAD, this value POSITIVE (PC/true time + tot_drift = instrument time)***
+
+Drift_Recorded = True # Added seperate case for when clock drift not recorded vs truly 0 -chs
 tot_drift = -46  # total clock drift from recovery time check, seconds.
 cnv_jd_drift = True  # True if .cnv file with Julian day time data, not corrected above
 datetime_drift = False  # True if datetime time data, or if corrected above
@@ -512,27 +599,36 @@ if cnv_jd_drift:
     print(f'Sample rate: {sample_rate} s')
 
 if datetime_drift:
-    time_adj = timej.copy()  # copy datetime data
-    drift = dt.timedelta(seconds=((-tot_drift) / len(time_adj)))  # incremental drift in seconds
-    offset = np.zeros_like(time_adj)  # empty array to track linearly increasing drift offsets
-    time_adjusted = np.zeros_like(time_adj)  # empty array for adjusted times
-    for i in range(len(time_adj)):
-        offset[i] = drift * i
-        time_adjusted[i] = time_adj[i] + offset[i]
+    if isinstance(time[0], np.datetime64):
+        time = time.astype('datetime64[us]').astype(object)
+
+    time_adj = time.copy()  # array of Python datetime objects
+    # incremental drift per sample
+    drift = dt.timedelta(seconds=(-tot_drift) / len(time_adj))
+
+    # build adjusted times using pure Python
+    time_adjusted = [t + drift * i for i, t in enumerate(time_adj)]
+
     print(f'Instrument clock drift = {tot_drift} seconds')
-    print(f'Drift correction = {offset[-1].seconds} seconds')
-    dn_dt = time_adjusted.copy()  # copy adjusted times
+    print(f'Drift correction = {(drift * (len(time_adj)-1)).seconds} seconds')
+
+    dn_dt = np.array(time_adjusted, dtype=object)
+
     print(f'Instrument started (not deployed): {dn_dt[0]}')
     print(f'Instrument stopped (drift corrected): {dn_dt[-1]}')
     print(f'Instrument stopped (drift uncorrected): {time_adj[-1]}')
-    sample_rate = round((dn_dt[100] - dn_dt[99]).seconds, ndigits=-1)
-    print(f'Sample rate: {sample_rate} s')
+
+    sample_rate = (dn_dt[100] - dn_dt[99]).total_seconds()
+    print(f"Sample rate: {sample_rate} s")
 
 if not cnv_jd_drift and not datetime_drift:
     dn_dt = time.copy()
 
-note(f"Clock drift setting tot_drift={tot_drift} s "
+if Drift_Recorded:
+    note(f"Clock drift setting tot_drift={tot_drift} s "
      f"via {'JD' if cnv_jd_drift else 'datetime' if datetime_drift else 'none'} method")
+else:
+    note(f"Clock drift not recorded, no correction made. ")
 
 # endregion
 ###
@@ -542,8 +638,8 @@ note(f"Clock drift setting tot_drift={tot_drift} s "
 
 # Setup Plotting Structure
 available_vars = [var for var in available_vars if var != 'time']
-if 'p' not in available_vars:
-    available_vars.append('p')
+# if 'p' not in available_vars:
+#     available_vars.append('p')
 
 var_labels = {
     't': 'Temp.',
@@ -557,6 +653,10 @@ num_vars = len(available_vars)
 fig, axes = plt.subplots(num_vars, 1, figsize=(12, 8), sharex=True)
 fig.subplots_adjust(hspace=0.04)
 fig.align_ylabels()
+
+if num_vars == 1: # Added to deal with cases where theres only one variable
+    axes = [axes]
+
 for i, var_name in enumerate(available_vars):
     if var_name in var_labels:  # Ensure we only plot variables with labels
         axes[i].plot(eval(var_name), lw=1, color='k')  # Use eval to get the variable
@@ -573,9 +673,9 @@ finish = 112160 + 1  # last good point +1
 # region
 
 if "t_ut" not in globals():
-    t_ut = t.copy()
-    c_ut = c.copy()
-    p_ut = p.copy()
+    t_ut = t.copy() if t is not None else None
+    c_ut = c.copy() if c is not None else None
+    p_ut = p.copy() if p is not None else None
     do_ut = do.copy() if do is not None else None
 
 raw_var_labels = {
@@ -588,13 +688,20 @@ if do_ut is not None:
 
 # Plot raw variables with trim lines to check:
 
-raw_plot_vars = {'t_ut': t_ut, 'c_ut': c_ut, 'p_ut': p_ut}
-if do_ut is not None:
-    raw_plot_vars['do_ut'] = do_ut
+# Build dict ONLY with variables that actually exist
+raw_plot_vars = {}
+if t_ut is not None: raw_plot_vars['t_ut'] = t_ut
+if c_ut is not None: raw_plot_vars['c_ut'] = c_ut
+if p_ut is not None: raw_plot_vars['p_ut'] = p_ut
+if do_ut is not None: raw_plot_vars['do_ut'] = do_ut
 
 fig, axes = plt.subplots(len(raw_plot_vars), 1, figsize=(12, 8), sharex=True)
 fig.subplots_adjust(hspace=0.04)
 fig.align_ylabels()
+
+# Fix single-axis case
+if len(raw_plot_vars) == 1:
+    axes = [axes]
 
 for i, (var_name, data_array) in enumerate(raw_plot_vars.items()):
     axes[i].plot(data_array, lw=1, color='gray')
@@ -621,28 +728,50 @@ plt.show(block=True)
 #     dt = dn_dt[:(finish - start)].copy()
 
 dt = dn_dt[start:finish]
-t = t[start:finish]
-c = c[start:finish]
-p = p[start:finish]
+if t is not None:
+    t = t[start:finish]
+
+if c is not None:
+    c = c[start:finish]
+
+if p is not None:
+    p = p[start:finish]
+
 if do is not None:
     do = do[start:finish]
 
-# recalc salinity after trimming
-s = gsw.SP_from_C(10 * c, t, p)
+# recalc salinity only if conductivity + pressure exist
+if c is not None and p is not None:
+    s = gsw.SP_from_C(10 * c, t, p)
+else:
+    s = None
+
 ##
 # --- (4) PLOT TRIMMED DATA ---
 dt_str = np.array([d.strftime('%Y-%m-%d %H:%M:%S.%f') for d in dt])
-var_labels = {'t': 'Temperature', 'c': 'Conductivity', 'p': 'Pressure', 's': 'Salinity'}
-if do is not None:
-    var_labels['do'] = 'Dissolved Oxygen'
+var_labels = {
+    't': 'Temperature',
+    'c': 'Conductivity',
+    'p': 'Pressure',
+    's': 'Salinity',
+    'do': 'Dissolved Oxygen'
+}
 
-plot_vars = {'t': t, 'c': c, 'p': p, 's': s}
-if do is not None:
-    plot_vars['do'] = do
+# Build plot_vars ONLY with variables that exist
+plot_vars = {}
+if t is not None: plot_vars['t'] = t
+if c is not None: plot_vars['c'] = c
+if p is not None: plot_vars['p'] = p
+if s is not None: plot_vars['s'] = s
+if do is not None: plot_vars['do'] = do
 
 fig, axes = plt.subplots(len(plot_vars), 1, figsize=(12, 8), sharex=True)
 fig.subplots_adjust(hspace=0.04)
 fig.align_ylabels()
+
+# Fix single-axis case
+if len(plot_vars) == 1:
+    axes = [axes]
 
 for i, (var_name, data_array) in enumerate(plot_vars.items()):
     axes[i].plot(data_array, lw=1, color='k')
@@ -656,21 +785,25 @@ note(f"Trimmed in-water indices: start={start}, finish={finish}")
 #
 # %% !! (SKIP THIS) Section 10: Temperature Salinity Plot
 ##
-# region
-fig_ts, ax_ts = plt.subplots(figsize=(8, 6))
-sc = ax_ts.scatter(
-    s, t,
-    c=np.arange(len(t)), cmap="viridis",
-    edgecolor='k', alpha=0.7
-)
-ax_ts.set_xlabel('Salinity')
-ax_ts.set_ylabel('Temperature')
-ax_ts.set_title('T-S Diagram')
-cbar = plt.colorbar(sc, label='Index')
+# Only run if both s and t have data
+if s is not None and t is not None and len(s) > 0 and len(t) > 0:
 
-ts_plot_path = f'{directory}{site}{year_str}{mooring}{pres}_{serial}_TS_plot.png'
-plt.savefig(ts_plot_path, dpi=300, bbox_inches='tight')
-plt.show(block=True)
+    # region
+    fig_ts, ax_ts = plt.subplots(figsize=(8, 6))
+    sc = ax_ts.scatter(
+        s, t,
+        c=np.arange(len(t)), cmap="viridis",
+        edgecolor='k', alpha=0.7
+    )
+    ax_ts.set_xlabel('Salinity')
+    ax_ts.set_ylabel('Temperature')
+    ax_ts.set_title('T-S Diagram')
+    cbar = plt.colorbar(sc, label='Index')
+
+    ts_plot_path = f'{directory}{site}{year_str}{mooring}{pres}_{serial}_TS_plot.png'
+    plt.savefig(ts_plot_path, dpi=300, bbox_inches='tight')
+    plt.show(block=True)
+
 
 # endregion
 ###
@@ -680,28 +813,29 @@ import plotly.express as px
 import pandas as pd
 import numpy as np
 
-# Assuming s and t are your salinity and temperature arrays
-df = pd.DataFrame({
-    'Salinity': s,
-    'Temperature': t,
-    'Index': np.arange(len(t))  # This is what you'll see on hover
-})
+if s is not None and t is not None and len(s) > 0 and len(t) > 0:
+    # Assuming s and t are your salinity and temperature arrays
+    df = pd.DataFrame({
+        'Salinity': s,
+        'Temperature': t,
+        'Index': np.arange(len(t))  # This is what you'll see on hover
+    })
 
-# Create interactive scatter plot
-fig = px.scatter(
-    df,
-    x='Salinity',
-    y='Temperature',
-    color='Index',
-    color_continuous_scale='viridis',
-    title='T-S Diagram',
-    hover_data={'Index': True}  # Show index on hover
-)
+    # Create interactive scatter plot
+    fig = px.scatter(
+        df,
+        x='Salinity',
+        y='Temperature',
+        color='Index',
+        color_continuous_scale='viridis',
+        title='T-S Diagram',
+        hover_data={'Index': True}  # Show index on hover
+    )
 
-fig.update_traces(marker=dict(size=6, line=dict(width=1, color='DarkSlateGrey')))
+    fig.update_traces(marker=dict(size=6, line=dict(width=1, color='DarkSlateGrey')))
 
-# Show the plot
-fig.show()
+    # Show the plot
+    fig.show()
 
 # endregion
 
@@ -711,13 +845,12 @@ detect_spikes_t = True  # Detect spikes in Temperature
 detect_spikes_c = True  # Detect spikes in Conductivity
 detect_spikes_do = False  # Optional: Detect in DO
 detect_spikes_p = False  # Optional: Detect in Pressure
-#
-# region
-Use_CHS_Func = False  # Uses Hampel detection to suggest outliers
-Use_CHS_outlier = False  # Detects outliers from scatter plot
 
-# sample_rate = 900
-# Spike detection parameters
+# region
+Use_CHS_Func = True  # Uses Hampel detection to suggest outliers
+#Use_CHS_outlier = False  # Detects outliers from scatter plot
+
+# Spike detection parameters from original code
 if sample_rate == 900:
     n1 = 2;
     n2 = 10;
@@ -727,80 +860,15 @@ else:
     n2 = 20;
     block = 200
 
-
 #
 # NOTE: These plots are for manual review only.
 # Spikes are algorithmically suggested, but no data is removed or altered.
-# Use this as a guide to record spike locations in your lab notebook per WHOCE QC flagging.
+# Use this as a guide to record spike locations in your lab notebook per WOCE QC flagging.
 
 def detect_spikes(data, n1, n2, block):
     original = pd.Series(data)
     processed = ctd.processing.despike(original.copy(), n1=n1, n2=n2, block=block)
     return np.where(~np.isclose(original, processed, equal_nan=True))[0]
-
-
-def detect_outliers(data1, data2, window_size, n, n0):
-    # --- Find Outliers ---
-    slope, intercept = np.polyfit(data1, data2, 1)
-    y_predict = slope * data1 + intercept
-    residuals = data2 - y_predict
-    threshold = n0 * np.std(residuals)
-    outlier_inds = np.where(np.abs(residuals) > threshold)[0]
-
-    print(f"Array size: {len(outlier_inds)}")
-    print("Outlier test:", outlier_inds[:20])
-
-    Make_Figure = True
-
-    s1 = pd.Series(data1).astype(float)
-    k = 1.4826  # scale factor for Gaussian distribution
-    rolling_median1 = s1.rolling(window=2 * window_size + 1, center=True).median()
-    diff1 = np.abs(s1 - rolling_median1)
-    mad1 = s1.rolling(window=2 * window_size + 1, center=True) \
-        .apply(lambda x: np.median(np.abs(x - np.median(x))), raw=True)
-    threshold1 = n * k * mad1
-    spike_bins1 = diff1 > threshold1
-    spike_inds1 = np.where(spike_bins1.fillna(False).values)[0]
-    z_score1 = diff1 / threshold1
-
-    s2 = pd.Series(data2).astype(float)
-    k = 1.4826  # scale factor for Gaussian distribution
-    rolling_median2 = s2.rolling(window=2 * window_size + 1, center=True).median()
-    diff2 = np.abs(s2 - rolling_median2)
-    mad2 = s2.rolling(window=2 * window_size + 1, center=True) \
-        .apply(lambda x: np.median(np.abs(x - np.median(x))), raw=True)
-    threshold2 = n * k * mad2
-    spike_bins2 = diff2 > threshold2
-    spike_inds2 = np.where(spike_bins2.fillna(False).values)[0]
-    z_score2 = diff2 / threshold2
-
-    for i in range(1, len(outlier_inds)):
-        if outlier_inds[i] == outlier_inds[i - 1] + 1:
-            z_score1[outlier_inds[i]] = z_score1[outlier_inds[i] - 1]
-            z_score2[outlier_inds[i]] = z_score2[outlier_inds[i] - 1]
-
-    outliers1 = np.intersect1d(np.where(np.abs(z_score1) - np.abs(z_score2) > 0), outlier_inds)
-    outliers2 = np.intersect1d(np.where(np.abs(z_score1) - np.abs(z_score2) < 0), outlier_inds)
-
-    flags1 = np.union1d(spike_inds1, outliers1)
-    flags2 = np.union1d(spike_inds2, outliers2)
-
-    if Make_Figure:
-        fig2, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), sharex=True)
-        ax1.plot(data1, color='black')
-        ax1.set_ylabel("Temperature")
-        ax1.scatter(spike_inds1, data1[spike_inds1], facecolors='c', edgecolors='c', zorder=3)
-        ax1.scatter(outliers1, data1[outliers1], facecolors='none', edgecolors='m', zorder=4, linewidths=1)
-
-        ax2.plot(data2, color='black')
-        ax2.scatter(spike_inds2, data2[spike_inds2], facecolors='c', edgecolors='c', zorder=3)
-        ax2.scatter(outliers2, data2[outliers2], facecolors='none', edgecolors='m', zorder=4, linewidths=1)
-        ax2.set_ylabel("Conductivity")
-        plt.tight_layout()
-        plt.show()
-        fig2.show()
-
-    return flags1, flags2
 
 
 def hampel_indices(series, window_size=5, n=3):
@@ -814,20 +882,38 @@ def hampel_indices(series, window_size=5, n=3):
     outliers = diff > threshold
     return np.where(outliers.fillna(False).values)[0]
 
+def hampel_fast(x, window_size=5, n=3, floor_mad=1e-3):
+    x = np.asarray(x, float)
+    k = window_size
+    L = 1.4826
+    # true-ish rolling median
+    med = median_filter(x, size=2*k+1, mode='reflect')
+    # absolute deviation
+    diff = np.abs(x - med)
+    # true-ish rolling MAD
+    mad = median_filter(diff, size=2*k+1, mode='reflect')
+    # prevent collapse
+    mad = np.maximum(mad, floor_mad)
+    threshold = n * L * mad
+    return np.where(diff > threshold)[0]
 
-if Use_CHS_Func and not Use_CHS_outlier:
-    window_size = 50
-    n = 9
-    spike_indices_t = hampel_indices(t, window_size, n) if detect_spikes_t else []
-    spike_indices_c = hampel_indices(c, window_size, n) if detect_spikes_c else []
-    spike_indices_do = hampel_indices(do, window_size, n) if detect_spikes_t else []
-    spike_indices_p = hampel_indices(p, window_size, n) if detect_spikes_c else []
+if Use_CHS_Func:
+    if len(data) > 200000:
+        window_size = 15
+        n = 10
+        floor_mad = 8e-3
+        spike_indices_t = hampel_fast(t, window_size, n, floor_mad) if detect_spikes_t else []
+        spike_indices_c = hampel_fast(c, window_size, n, floor_mad) if detect_spikes_c else []
+        spike_indices_do = hampel_fast(do, window_size, n, floor_mad) if detect_spikes_do else []
+        spike_indices_p = hampel_fast(p, window_size, n, floor_mad) if detect_spikes_p else []
+    else:
+        window_size = 50
+        n = 8
+        spike_indices_t = hampel_indices(t, window_size, n) if detect_spikes_t else []
+        spike_indices_c = hampel_indices(c, window_size, n) if detect_spikes_c else []
+        spike_indices_do = hampel_indices(do, window_size, n) if detect_spikes_t else []
+        spike_indices_p = hampel_indices(p, window_size, n) if detect_spikes_c else []
 
-    if detect_spikes_t and detect_spikes_c and Use_CHS_outlier:
-        n0 = 4
-        spike_indices_t, spike_indices_c = detect_outliers(t, c, window_size, n, n0)
-    print("Outliers in t:", spike_indices_t[:20])
-    print("Outliers in c:", spike_indices_c[:20])
 else:
     # Run spike detection (as guidance only)
     spike_indices_t = detect_spikes(t, n1, n2, block) if detect_spikes_t else []
@@ -877,8 +963,8 @@ plt.show(block=True)
 
 # endregion
 
-# %% Section 13A: Apply WHOCE CTD Flags to variables
-# WHOCE CTD Flag Definitions: 2 = Acceptable measurement (default), 3 = Questionable measurement, 4 = Bad measurement, 5 = Not reported (e.g. missing/NaN)
+# %% Section 13A: Apply WOCE CTD Flags to variables
+# WOCE CTD Flag Definitions: 2 = Acceptable measurement (default), 3 = Questionable measurement, 4 = Bad measurement, 5 = Not reported (e.g. missing/NaN)
 
 ### CONTROL WHICH VARIABLES GET FLAGGED ###
 flag_c = True  # True if conductivity should be flagged
@@ -889,18 +975,13 @@ flag_p = True  # True if pressure should be flagged
 flag_pt = True
 flag_svel = True
 
+Flag_From_Filter = False
 # --- Temperature Flags ---
 if flag_t:
     flag_t_array = np.full_like(t, 2, dtype=int)
     flagged_t_data = [
         # e.g., (1000, 3), (2000, 4)
-        (68072, 4),
-        (68073, 4),
-        (747, 3),
-        (839, 3),
-        (1951, 3),
-        (4777, 3),
-        (38480, 3),
+        (837, 4),
     ]
     if flagged_t_data:
         t_indices, t_values = zip(*flagged_t_data)
@@ -923,15 +1004,6 @@ if flag_c:
         c_indices, c_values = zip(*flagged_c_data)
         flag_c_array[np.array(c_indices, dtype=int)] = np.array(c_values, dtype=int)
     flag_c_array[np.isnan(c)] = 5
-
-# --- Salinity Flags (from T + C flags) ---
-if flag_s:
-    flag_s_array = np.full_like(s, 2, dtype=int)
-    combined_flagged_data = flagged_c_data + flagged_t_data
-    if combined_flagged_data:
-        s_indices, s_values = zip(*combined_flagged_data)
-        flag_s_array[np.array(s_indices, dtype=int)] = np.array(s_values, dtype=int)
-    flag_s_array[np.isnan(s)] = 5
 
 # --- Pressure Flags ---
 if flag_p:
@@ -956,6 +1028,36 @@ if flag_do and do is not None:
         do_indices, do_values = zip(*flagged_do_data)
         flag_do_array[np.array(do_indices, dtype=int)] = np.array(do_values, dtype=int)
     flag_do_array[np.isnan(do)] = 5
+
+if Flag_From_Filter:
+    note(f"Data flagged using Hampel filter (window={window_size}, n={n}, floor={floor_mad})")
+
+    # --- Temperature spikes from filter ---
+    if flag_t and spike_indices_t is not None and len(spike_indices_t) > 0:
+        flag_t_array[np.array(spike_indices_t, dtype=int)] = 3
+
+    # --- Conductivity spikes from filter ---
+    if flag_c and spike_indices_c is not None and len(spike_indices_c) > 0:
+        flag_c_array[np.array(spike_indices_c, dtype=int)] = 3
+
+    # --- Pressure spikes (optional, if you compute them) ---
+    if flag_p and spike_indices_p is not None and len(spike_indices_p) > 0:
+        flag_p_array[np.array(spike_indices_p, dtype=int)] = 3
+
+    # --- DO spikes (optional) ---
+    if flag_do and do is not None and spike_indices_do is not None and len(spike_indices_do) > 0:
+        flag_do_array[np.array(spike_indices_do, dtype=int)] = 3
+
+# --- Salinity Flags (from T + C flags) ---
+if flag_s:
+    flag_s_array = np.full_like(s, 2, dtype=int)
+    # Inherit the worst flag from temperature and conductivity
+    if flag_t:
+        flag_s_array = np.maximum(flag_s_array, flag_t_array)
+    if flag_c:
+        flag_s_array = np.maximum(flag_s_array, flag_c_array)
+    # NaNs in salinity get flag 5
+    flag_s_array[np.isnan(s)] = 5
 
 ##
 # %% !! (SKIP THIS) Section 13B: PLOT QC FLAGS
@@ -984,13 +1086,13 @@ def has_real_flags(flags, data):
 
 flagged_vars = []
 
-if has_real_flags(flag_t_array, t):
+if flag_t and 'flag_t_array' in locals() and has_real_flags(flag_t_array, t):
     flagged_vars.append(('Temperature', t, flag_t_array))
-if has_real_flags(flag_c_array, c):
+if flag_c and 'flag_c_array' in locals() and has_real_flags(flag_c_array, c):
     flagged_vars.append(('Conductivity', c, flag_c_array))
-if has_real_flags(flag_s_array, s):
+if flag_s and 'flag_s_array' in locals() and has_real_flags(flag_s_array, s):
     flagged_vars.append(('Salinity', s, flag_s_array))
-if has_real_flags(flag_p_array, p):
+if flag_p and 'flag_p_array' in locals() and has_real_flags(flag_p_array, p):
     flagged_vars.append(('Pressure', p, flag_p_array))
 if flag_do and 'flag_do_array' in locals() and has_real_flags(flag_do_array, do):
     flagged_vars.append(('Dissolved Oxygen', do, flag_do_array))
@@ -1019,7 +1121,7 @@ else:
                 ax.scatter(idx, data_var[idx], color=color, s=8)
 
     axes[-1].set_xlabel("Index")
-    plt.suptitle("QC Flags Applied (WHOCE Scheme)", fontsize=16)
+    plt.suptitle("QC Flags Applied (WOCE Scheme)", fontsize=16)
     fig.subplots_adjust(top=0.9, bottom=0.15)
 
     fig.legend(
@@ -1033,7 +1135,7 @@ else:
 # plt.show()
 plt.savefig("qc_flags_plot.png", dpi=150)
 
-note("WHOCE QC flags created for all available variables")
+note("WOCE QC flags created for all available variables")
 
 # endregion
 ##
@@ -1063,13 +1165,13 @@ def has_real_flags(flags, data):
 
 # Collect flagged variables
 flagged_vars = []
-if has_real_flags(flag_t_array, t):
+if flag_t and 'flag_t_array' in locals() and has_real_flags(flag_t_array, t):
     flagged_vars.append(('Temperature', t, flag_t_array))
-if has_real_flags(flag_c_array, c):
+if flag_c and 'flag_c_array' in locals() and has_real_flags(flag_c_array, c):
     flagged_vars.append(('Conductivity', c, flag_c_array))
-if has_real_flags(flag_s_array, s):
+if flag_s and 'flag_s_array' in locals() and has_real_flags(flag_s_array, s):
     flagged_vars.append(('Salinity', s, flag_s_array))
-if has_real_flags(flag_p_array, p):
+if flag_p and 'flag_p_array' in locals() and has_real_flags(flag_p_array, p):
     flagged_vars.append(('Pressure', p, flag_p_array))
 if flag_do and 'flag_do_array' in locals() and has_real_flags(flag_do_array, do):
     flagged_vars.append(('Dissolved Oxygen', do, flag_do_array))
@@ -1108,7 +1210,7 @@ else:
 
     fig.update_layout(
         height=300 * len(flagged_vars),
-        title_text="QC Flags Applied (WHOCE Scheme)",
+        title_text="QC Flags Applied (WOCE Scheme)",
         legend=dict(orientation="h", y=-0.1),
         margin=dict(t=50, b=50)
     )
@@ -1119,9 +1221,9 @@ else:
 # endregion
 
 # %% 13D: TS plot omitting flag 4 data from view
-# fig.write_html(f'{directory}{site}{year_str}{mooring}{pres}_{serial}_ManualSpikeReview.html')
+fig.write_html(f'{directory}{site}{year_str}{mooring}{pres}_{serial}_ManualSpikeReview.html')
 
-# %% 13D: Interactive T-S Plot with WHOCE QC flags (by Salinity Flag)
+# %% 13D: Interactive T-S Plot with WOCE QC flags (by Salinity Flag)
 # region
 ###
 import plotly.graph_objects as go
@@ -1184,10 +1286,10 @@ for flag in flag_order:
         ))
 
 fig.update_layout(
-    title="Interactive TS Diagram with WHOCE QC Flags (by Salinity Flag)",
+    title="Interactive TS Diagram with WOCE QC Flags (by Salinity Flag)",
     xaxis=dict(title="Salinity"),
     yaxis=dict(title="Temperature (°C)"),
-    legend=dict(title="WHOCE QC Flags", traceorder='normal'),
+    legend=dict(title="WOCE QC Flags", traceorder='normal'),
     margin=dict(l=70, r=20, t=70, b=70),
     height=600
 )
@@ -1201,46 +1303,52 @@ fig.show()
 
 # region
 
+if c is not None and len(c) > 0:
+    cond_offset = False
 
-c0_offset = 1.0000  # multiplier at start of record
-c_offset = 1.0000  # multiplier at end of record
+    c0_offset = 1.0000  # multiplier at start of record
+    c_offset = 1.0000  # multiplier at end of record
 
-c_offset_arr = np.linspace(c0_offset, c_offset, len(dt))
-print('---')
-print(f'Conductivity offset range: {c_offset_arr[0]:.4f} - {c_offset_arr[-1]:.4f}')
-print('---')
-print('Initial conductivity: {:.4f} mS/cm'.format(c[0]))
-print('Final conductivity: {:.4f} mS/cm'.format(c[-1]))
+    c_offset_arr = np.linspace(c0_offset, c_offset, len(dt))
+    print('---')
+    print(f'Conductivity offset range: {c_offset_arr[0]:.4f} - {c_offset_arr[-1]:.4f}')
+    print('---')
+    print('Initial conductivity: {:.4f} mS/cm'.format(c[0]))
+    print('Final conductivity: {:.4f} mS/cm'.format(c[-1]))
 
-if c0_offset == 1.0000 and c_offset == 1.0000:
-    c_adj = c.copy()
-    s_adj = s.copy()
-    print('Corrected initial conductivity: {:.4f} mS/cm'.format(c_adj[0]))
-    print('Corrected final conductivity: {:.4f} mS/cm'.format(c_adj[-1]))
-    print('No correction made.')
-else:
-    c_adj = c.copy() * c_offset_arr
-    s_adj = gsw.SP_from_C(10 * c_adj, t.copy(), p)  # recalc salinity using mS/cm
-    print('Initial corrected conductivity: {:.4f} mS/cm'.format(c_adj[0]))
-    print('Final corrected conductivity: {:.4f} mS/cm'.format(c_adj[-1]))
+    if c0_offset == 1.0000 and c_offset == 1.0000:
+        c_adj = c.copy()
+        s_adj = s.copy()
+        print('Corrected initial conductivity: {:.4f} mS/cm'.format(c_adj[0]))
+        print('Corrected final conductivity: {:.4f} mS/cm'.format(c_adj[-1]))
+        print('No correction made.')
+    else:
+        c_adj = c.copy() * c_offset_arr
+        s_adj = gsw.SP_from_C(10 * c_adj, t.copy(), p)  # recalc salinity using mS/cm
+        print('Initial corrected conductivity: {:.4f} mS/cm'.format(c_adj[0]))
+        print('Final corrected conductivity: {:.4f} mS/cm'.format(c_adj[-1]))
 
-pre_slope = (c[-1] - c[0]) / len(c)
-post_slope = (c_adj[-1] - c_adj[0]) / len(c_adj)
+    pre_slope = (c[-1] - c[0]) / len(c)
+    post_slope = (c_adj[-1] - c_adj[0]) / len(c_adj)
 
-print('---')
-print(f"Pre-correction conductivity slope: {pre_slope:.6f} mS/cm per sample")
-print(f"Post-correction conductivity slope: {post_slope:.6f} mS/cm per sample")
-print('---')
+    print('---')
+    print(f"Pre-correction conductivity slope: {pre_slope:.6f} mS/cm per sample")
+    print(f"Post-correction conductivity slope: {post_slope:.6f} mS/cm per sample")
+    print('---')
 
-note(f"Conductivity offset applied (c0_offset={c0_offset}, c_offset={c_offset})")
+    if cond_offset:
+        note(f"Conductivity offset applied (c0_offset={c0_offset}, c_offset={c_offset})")
+    else:
+        note(f"No CTD profile data available for comparison. No conductivity offset applied.")
 
 # endregion
 ###
 # %% Section 15: Derive Quantities from Temperature and Salinity
 # salinity is derived from T and C above for the T/S plots.
-SA = gsw.SA_from_SP(s_adj, p, lon, lat)  # absolute salinity (g/kg) for gsw calculations
-pt = gsw.pt0_from_t(SA, t, p)  # potential temperature at p = 0 db
-svel = gsw.sound_speed_t_exact(SA, t, p)  # sound speed in seawater
+if s is not None and t is not None and len(s) > 0 and len(t) > 0:
+    SA = gsw.SA_from_SP(s_adj, p, lon, lat)  # absolute salinity (g/kg) for gsw calculations
+    pt = gsw.pt0_from_t(SA, t, p)  # potential temperature at p = 0 db
+    svel = gsw.sound_speed_t_exact(SA, t, p)  # sound speed in seawater
 
 
 ###
@@ -1262,30 +1370,100 @@ if flag_svel:
 no_pressure_sensor = False  # True is no pressure sensor
 
 if no_pressure_sensor:
-    round_p = 108  # constant pressure value if no pressure sensor
-
+    round_p = 10000  # constant pressure value if no pressure sensor
+    p0 = round_p
+    inst_depth = 100000
 else:
     mean_p = np.nanmean(p)
+    p0 = np.nanmedian(p)
     round_p = np.asarray(p, dtype=int)
     round_p = stats.mode(round_p, keepdims=False)[0]
+    inst_depth = float(-gsw.z_from_p(p0, lat))
 ##
 # %%Section 18: Create objects for the NetCDF
 import datetime as dtmod
 
+def safe_minmax_qc(data, flags=None, good_flags=(1, 2)):
+    """
+    Compute min/max using only QC-approved values.
+    If no flags are provided, use all non-NaN data.
+    If no valid data remain, return (None, None).
+    """
+    if data is None:
+        return None, None
 
-def safe_minmax(arr):
+    arr = np.array(data, dtype=float)
+
+    # Apply QC mask if flags exist
+    if flags is not None:
+        flags = np.array(flags)
+        mask = np.isin(flags, good_flags)
+        arr = np.where(mask, arr, np.nan)
+    # If everything is NaN after masking, return None
+    if np.all(np.isnan(arr)):
+        return None, None
     return float(np.nanmin(arr)), float(np.nanmax(arr))
 
 
-t_min, t_max = safe_minmax(t)
-c_min, c_max = safe_minmax(c_adj)
-p_min, p_max = safe_minmax(p)
-s_min, s_max = safe_minmax(s_adj)
-pt_min, pt_max = safe_minmax(pt)
-svel_min, svel_max = safe_minmax(svel)
-inst_depth = float(-gsw.z_from_p(round_p, lat))
+# Temperature
+if t is not None:
+    t_min, t_max = safe_minmax_qc(t,
+        flags=flag_t_array if (flag_t and 'flag_t_array' in locals() and has_real_flags(flag_t_array, t)) else None)
+
+# Conductivity
+if c is not None:
+    c_min, c_max = safe_minmax_qc(c_adj,
+        flags=flag_c_array if (flag_c and 'flag_c_array' in locals() and has_real_flags(flag_c_array, c)) else None)
+
+# Pressure
+if p is not None:
+    p_min, p_max = safe_minmax_qc(p,
+        flags=flag_p_array if (flag_p and 'flag_p_array' in locals() and has_real_flags(flag_p_array, p)) else None)
+
+# Salinity
+if s is not None:
+    s_min, s_max = safe_minmax_qc(s_adj,
+        flags=flag_s_array if (flag_s and 'flag_s_array' in locals() and has_real_flags(flag_s_array, s)) else None)
+
+# Potential Temperature
+if 'pt' in locals():
+    pt_min, pt_max = safe_minmax_qc(pt,
+        flags=flag_pt_array if (flag_pt and 'flag_pt_array' in locals() and has_real_flags(flag_pt_array, pt)) else None)
+
+# Sound Speed
+if 'svel' in locals():
+    svel_min, svel_max = safe_minmax_qc(svel,
+        flags=flag_svel_array if (flag_svel and 'flag_svel_array' in locals() and has_real_flags(flag_svel_array, svel)) else None)
+
+# Dissolved Oxygen
+if 'do' in locals():
+    do_min, do_max = safe_minmax_qc(do,
+        flags=flag_do_array if (flag_do and 'flag_do_array' in locals() and has_real_flags(flag_do_array, do)) else None)
+
+
 offbottom_depth = corr_water_depth - inst_depth
 time_coverage_resolution = isodate.duration_isoformat(dtmod.timedelta(seconds=sample_rate))
+
+Mooring_Move = False
+
+if Mooring_Move:
+    index_shift = 68072 # first index impacted
+    index_impact = 1
+
+    p0 = np.nanmedian(p[:index_shift-1])
+    inst_depth = float(-gsw.z_from_p(p0, lat))
+    offbottom_depth = corr_water_depth - inst_depth
+    p0_shift = np.nanmedian(p[index_shift+index_impact:])
+    inst_depth_shift = float(-gsw.z_from_p(p0_shift, lat))
+
+    date_of_shift = dt[index_shift]
+    pretty_date = date_of_shift.strftime("%B %d, %Y")
+
+    note(f"Mooring moved during deployment on {pretty_date}")
+    note(f"Initial depth={inst_depth:.2f}m, Final Depth={inst_depth_shift:.2f}m .")
+    # ---------- Add additional comments about shift below ----------------
+    note(f"Mooring briefly recovered and redeployed in same location. ")
+
 ###
 # %%Section 19: Create NetCDF, only including available variables
 import numpy as np
@@ -1304,76 +1482,110 @@ data_vars = {}
 
 # Temperature
 if 't' in locals() and t is not None:
-    data_vars["TE90_01"] = (["time", "station"], reshape(t))
+    data_vars["TE90_01"] = (["station", "time"], reshape(t).T)
     if 'flag_t_array' in locals():
-        data_vars["TE90_01_QC"] = (["time", "station"], reshape(flag_t_array))
+        data_vars["TE90_01_QC"] = (["station", "time"], reshape(flag_t_array).T)
 
 # Conductivity
 if 'c_adj' in locals() and c_adj is not None:
-    data_vars["CNDC_01"] = (["time", "station"], reshape(c_adj))
+    data_vars["CNDC_01"] = (["station", "time"], reshape(c_adj).T)
     if 'flag_c_array' in locals():
-        data_vars["CNDC_01_QC"] = (["time", "station"], reshape(flag_c_array))
+        data_vars["CNDC_01_QC"] = (["station", "time"], reshape(flag_c_array).T)
 
 # Pressure
 if 'p' in locals() and p is not None:
-    data_vars["PRES_01"] = (["time", "station"], reshape(p))
+    data_vars["PRES_01"] = (["station", "time"], reshape(p).T)
     if 'flag_p_array' in locals():
-        data_vars["PRES_01_QC"] = (["time", "station"], reshape(flag_p_array))
+        data_vars["PRES_01_QC"] = (["station", "time"], reshape(flag_p_array).T)
 
 # Salinity
 if 's_adj' in locals() and s_adj is not None:
-    data_vars["PSAL_01"] = (["time", "station"], reshape(s_adj))
+    data_vars["PSAL_01"] = (["station", "time"], reshape(s_adj).T)
     if 'flag_s_array' in locals():
-        data_vars["PSAL_01_QC"] = (["time", "station"], reshape(flag_s_array))
+        data_vars["PSAL_01_QC"] = (["station", "time"], reshape(flag_s_array).T)
 
 # Dissolved Oxygen
 if 'do' in locals() and do is not None:
-    data_vars["DOXY_01"] = (["time", "station"], reshape(do))
+    data_vars["DOXY_01"] = (["station", "time"], reshape(do).T)
     if 'flag_do_array' in locals():
-        data_vars["DOXY_01_QC"] = (["time", "station"], reshape(flag_do_array))
+        data_vars["DOXY_01_QC"] = (["station", "time"], reshape(flag_do_array).T)
 
 # Potential Temperature
 if 'pt' in locals() and pt is not None:
-    data_vars["POTM_01"] = (["time", "station"], reshape(pt))
+    data_vars["POTM_01"] = (["station", "time"], reshape(pt).T)
     if 'flag_pt_array' in locals():
-        data_vars["POTM_01_QC"] = (["time", "station"], reshape(flag_pt_array))
+        data_vars["POTM_01_QC"] = (["station", "time"], reshape(flag_pt_array).T)
 
 # Sound Velocity
 if 'svel' in locals() and svel is not None:
-    data_vars["SVEL_01"] = (["time", "station"], reshape(svel))
+    data_vars["SVEL_01"] = (["station", "time"], reshape(svel).T)
     if 'flag_svel_array' in locals():
-        data_vars["SVEL_01_QC"] = (["time", "station"], reshape(flag_svel_array))
+        data_vars["SVEL_01_QC"] = (["station", "time"], reshape(flag_svel_array).T)
 
-# Always include datetime
-data_vars["datetime"] = (["station", "time"], time_seconds.reshape(1, -1))
+# datetime - removed this because redundant -CHS
+# data_vars["datetime"] = (["station", "time"], time_seconds.reshape(1, -1))
 
-# Build dataset
 ds = xr.Dataset(
     data_vars=data_vars,
     coords=dict(
-        time=("time", time_seconds),
-        station=("station", [0]),
-        lat=("station", [lat]),
-        lon=("station", [lon]),
-        depth=("station", [round_p]),
+        time=("time", time_seconds),  # already fine
+        station=("station", np.array([0], dtype="int32")),        # CF‑compliant
+        lat=("station", np.array([lat], dtype="float64")),        # CF‑compliant
+        lon=("station", np.array([lon], dtype="float64")),        # CF‑compliant
+        depth=("station", np.array([round_p], dtype="float32")),  # CF‑compliant
     )
 )
+qc_attrs = {
+    "standard_name": "quality_flag",
+    "conventions": "WOCE",
+    "flag_values": np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9], dtype="int8"),
+    "flag_meanings": (
+        "no_qc_performed "
+        "good "
+        "probably_good "
+        "probably_bad "
+        "bad "
+        "changed "
+        "below_detection "
+        "in_excess "
+        "interpolated "
+        "missing"
+    ),
+    "_FillValue": np.int8(9),
+    "_Unsigned": "true",
+}
+qc_long_names = {
+    "TE90_01_QC": "quality flag for temperature",
+    "CNDC_01_QC": "quality flag for conductivity",
+    "PRES_01_QC": "quality flag for pressure",
+    "PSAL_01_QC": "quality flag for salinity",
+    "POTM_01_QC": "quality flag for potential temperature",
+    "SVEL_01_QC": "quality flag for sound velocity",
+    "DOXY_01_QC": "quality flag for dissolved oxygen",
+}
 
-# Link QC flags
 for var in ["TE90_01", "CNDC_01", "PRES_01", "PSAL_01", "POTM_01", "SVEL_01", "DOXY_01"]:
     qc_var = var + "_QC"
+
     if var in ds and qc_var in ds:
+
+        old = ds[qc_var]
+        dims = old.dims
+        data_int8 = old.values.astype("int8")
+
+        ds = ds.drop_vars(qc_var)
+        ds[qc_var] = (dims, data_int8)
+
+        # Apply QC attributes
+        for att, val in qc_attrs.items():
+            ds[qc_var].attrs[att] = val
+
+        # Add CIOOS-required long_name
+        ds[qc_var].attrs["long_name"] = qc_long_names.get(qc_var, "quality flag")
+
+        # Link QC variable to data variable
         ds[var].attrs["ancillary_variables"] = qc_var
 
-# QC flag attributes
-qc_attrs = {
-    "long_name": "quality flag",
-    "conventions": "WOCE",
-    "flag_values": np.array([2, 3, 4, 5], dtype="i1"),
-    "flag_meanings": "acceptable questionable bad missing",
-    "_FillValue": 9,
-    "coverage_content_type": "qualityInformation"
-}
 for var in ds.data_vars:
     if var.endswith("_QC"):
         ds[var].attrs.update(qc_attrs)
@@ -1389,14 +1601,10 @@ if "TE90_01" in ds:
         "sdn_uom_urn": "UPAA",
         "sdn_uom_name": "Degrees Celsius",
         "generic_name": "temperature",
-        "coverage_content_type": "physicalMeasurement",
         "reference_scale": "ITS-90",
-        "sensor_type": "SBE37-SM",
-        "sensor_depth": inst_depth,
-        "serial_number": serial,
         "_FillValue": 1e35,
-        "data_min": float(np.nanmin(t)),
-        "data_max": float(np.nanmax(t)),
+        "data_min": t_min,
+        "data_max": t_max,
     })
 
 if "CNDC_01" in ds:
@@ -1408,13 +1616,9 @@ if "CNDC_01" in ds:
         "sdn_uom_urn": "UECA",
         "sdn_uom_name": "Siemens per metre",
         "generic_name": "conductivity",
-        "coverage_content_type": "physicalMeasurement",
-        "sensor_type": "SBE37-SM",
-        "sensor_depth": inst_depth,
-        "serial_number": serial,
         "_FillValue": 1e35,
-        "data_min": float(np.nanmin(c_adj)),
-        "data_max": float(np.nanmax(c_adj)),
+        "data_min": c_min,
+        "data_max": c_max,
     })
 
 if "PRES_01" in ds:
@@ -1426,13 +1630,9 @@ if "PRES_01" in ds:
         "sdn_uom_urn": "UPDB",
         "sdn_uom_name": "decibars",
         "generic_name": "pressure",
-        "coverage_content_type": "physicalMeasurement",
-        "sensor_type": "SBE37-SM",
-        "sensor_depth": inst_depth,
-        "serial_number": serial,
         "_FillValue": 1e35,
-        "data_min": float(np.nanmin(p)),
-        "data_max": float(np.nanmax(p)),
+        "data_min": p_min,
+        "data_max": p_max,
     })
 
 if "PSAL_01" in ds:
@@ -1444,31 +1644,23 @@ if "PSAL_01" in ds:
         "sdn_uom_urn": "UUUU",
         "sdn_uom_name": "dimensionless",
         "generic_name": "salinity",
-        "coverage_content_type": "physicalMeasurement",
-        "sensor_type": "SBE37-SM",
-        "sensor_depth": inst_depth,
-        "serial_number": serial,
         "_FillValue": 1e35,
-        "data_min": float(np.nanmin(s_adj)),
-        "data_max": float(np.nanmax(s_adj)),
+        "data_min": s_min,
+        "data_max": s_max,
     })
 
 if "DOXY_01" in ds:
     ds["DOXY_01"].attrs.update({
         "units": "ml l-1",
-        "long_name": "dissolved oxygen",
-        "standard_name": "moles_of_oxygen_per_unit_mass_in_sea_water",
+        "long_name": "dissolved oxygen concentration",
+        "standard_name": "volume_fraction_of_oxygen_in_sea_water",
         "sdn_parameter_urn": "SDN:P01::DOXMZZ01",  # Dissolved oxygen concentration
         "sdn_uom_urn": "UMLL",
         "sdn_uom_name": "Millilitres per litre",
         "generic_name": "oxygen",
-        "coverage_content_type": "physicalMeasurement",
-        "sensor_type": "SBE37-SM",
-        "sensor_depth": inst_depth,
-        "serial_number": serial,
         "_FillValue": 1e35,
-        "data_min": float(np.nanmin(do)),
-        "data_max": float(np.nanmax(do)),
+        "data_min": do_min,
+        "data_max": do_max,
     })
 
 if "POTM_01" in ds:
@@ -1479,14 +1671,10 @@ if "POTM_01" in ds:
         "sdn_uom_urn": "UPAA",
         "sdn_uom_name": "Degrees Celsius",
         "generic_name": "potential_temperature",
-        "coverage_content_type": "physicalMeasurement",
         "reference_scale": "ITS-90",
-        "sensor_type": "SBE37-SM",
-        "sensor_depth": inst_depth,
-        "serial_number": serial,
         "_FillValue": 1e35,
-        "data_min": float(np.nanmin(pt)),
-        "data_max": float(np.nanmax(pt)),
+        "data_min": pt_min,
+        "data_max": pt_max,
     })
 
 if "SVEL_01" in ds:
@@ -1494,17 +1682,15 @@ if "SVEL_01" in ds:
         "units": "m s-1",
         "long_name": "sound_velocity",
         "standard_name": "speed_of_sound_in_sea_water",
-        "sdn_parameter_urn": "SDN:P01::SVELXXXX",
+        "sdn_parameter_urn": "SDN:P01::SVELCV01",
+        "sdn_parameter_name": "Sound velocity in the water body by computation from temperature and salinity by unspecified algorithm",
         "sdn_uom_urn": "UVAA",
         "sdn_uom_name": "metres per second",
         "generic_name": "sound_velocity",
-        "coverage_content_type": "physicalMeasurement",
-        "sensor_type": "SBE37-SM",
-        "sensor_depth": inst_depth,
-        "serial_number": serial,
+        "algorithm": "TEOS-10 GSW function gsw.sound_speed_t_exact",
         "_FillValue": 1e35,
-        "data_min": float(np.nanmin(svel)),
-        "data_max": float(np.nanmax(svel)),
+        "data_min": svel_min,
+        "data_max": svel_max,
     })
 
 if "datetime" in ds:
@@ -1516,7 +1702,21 @@ if "datetime" in ds:
         "sdn_uom_urn": "SDN:P06::TISO",
         "sdn_uom_name": "Seconds",
         "generic_name": "time",
-        "coverage_content_type": "physicalMeasurement",
+        #"coverage_content_type": "physicalMeasurement",
+        "_FillValue": 1e35,
+        "data_min": float(np.nanmin(time_seconds)),
+        "data_max": float(np.nanmax(time_seconds)),
+    })
+
+if "time" in ds:
+    ds["time"].attrs.update({
+        "units": "seconds since 1970-01-01T00:00:00Z",
+        "standard_name": "time",
+        "long_name": "time_of_measurement",
+        "sdn_parameter_urn": "SDN:P01::ELTMEP01",
+        "sdn_uom_urn": "SDN:P06::TISO",
+        "sdn_uom_name": "Seconds",
+        "generic_name": "time",
         "_FillValue": 1e35,
         "data_min": float(np.nanmin(time_seconds)),
         "data_max": float(np.nanmax(time_seconds)),
@@ -1527,6 +1727,7 @@ ds["lat"].attrs.update({
     "units": "degrees_north",
     "standard_name": "latitude",
     "long_name": "latitude",
+    "sdn_parameter_name": "Latitude north",
     "sdn_parameter_urn": "SDN:P01::ALATZZ01",
     "sdn_uom_urn": "SDN:P06::DEGN",
     "sdn_uom_name": "Degrees north"
@@ -1535,18 +1736,28 @@ ds["lon"].attrs.update({
     "units": "degrees_east",
     "standard_name": "longitude",
     "long_name": "longitude",
+    "sdn_parameter_name": "Longitude east",
     "sdn_parameter_urn": "SDN:P01::ALONZZ01",
     "sdn_uom_urn": "SDN:P06::DEGE",
     "sdn_uom_name": "Degrees east"
 })
 ds["depth"].attrs.update({
-    "units": "metres",
+    "units": "m",
     "positive": "down",
     "standard_name": "depth",
     "long_name": "distance below the surface",
+    "sdn_parameter_name": "Depth (spatial coordinate) relative to water surface in the water body",
     "sdn_parameter_urn": "SDN:P01::ADEPZZ01",
     "sdn_uom_urn": "SDN:P06::ULAA",
-    "sdn_uom_name": "Metres"
+    "sdn_uom_name": "Metres",
+    "comment": "If mooring shifts during deployment, depth calculated from initial location. Any additional depths recorded in comments. ",
+    "processing_method": "TEOS-10 Gibbs SeaWater function using median p: depth = -gsw.z_from_p(pressure, latitude)",
+})
+ds["station"].attrs.update({
+    "long_name": "station identifier",
+    #"cf_role": "timeseries_id",
+    "station_name": mooring,
+    "comment": "Mooring deployment identifier",
 })
 
 # ---------------- Global Attributes ----------------
@@ -1555,8 +1766,12 @@ ds.attrs.update({
     "standard_name_vocabulary": "CF Standard Name Table v80",
     "source": dataset_id,
     "id": dataset_id,
-    "featureType": "timeseries",
-    "cdm_data_type": "station",
+    "sensor_type": instrument_model,
+    "sensor_depth": inst_depth,
+    "serial_number": serial,
+    "coverage_content_type": "physicalMeasurement",
+    "featureType": "timeSeries",
+    "cdm_data_type": "TimeSeries",
     "data_type": data_type,
     "processing_level": processing,
     "country_code": country_code,
@@ -1567,10 +1782,10 @@ ds.attrs.update({
     "sdn_institution_vocabulary": "https://edmo.seadatanet.org",
     "creator_type": "person",
     "creator_name": creator_name,
-    "processor_name": processor_name,
+    #"processor_name": processor_name,
     "creator_country": "Canada",
     "creator_email": creator_email,
-    "processor_email": processor_email,
+    #"processor_email": processor_email,
     "creator_institution": "Bedford Institute of Oceanography",
     "creator_address": "1 Challenger Drive, Dartmouth NS, B2Y 4A2.",
     "creator_city": "Dartmouth",
@@ -1594,7 +1809,7 @@ ds.attrs.update({
     "license": "Open Government License - Canada, https://open.canada.ca/en/open-government-licence-canada",
     "infoUrl": "https://www.bio.gc.ca/science/newtech-technouvelles/observatory-observatoire-en.php",
     "inst_type": inst_type,
-    "sampling_interval": sample_rate,
+    "sampling_interval": float(sample_rate),
     "cruise_number": cruise_number,
     "cruise_name": cruise_name,
     "mooring_number": mooring_number,
@@ -1629,11 +1844,11 @@ ds.attrs.update({
     "geospatial_lon_min": lon,
     "geospatial_lon_max": lon,
     "geospatial_lon_units": "degrees_east",
-    "geospatial_vertical_max": round_p,
-    "geospatial_vertical_min": round_p,
+    "geospatial_vertical_max": inst_depth,
+    "geospatial_vertical_min": inst_depth,
     "geospatial_vertical_units": "metres",
     "geospatial_vertical_positive": "down",
-    "geospatial_bounds": f"POINT({lat} {lon})",
+    "geospatial_bounds": f"POINT({lon} {lat})",
     "geospatial_bounds_crs": "EPSG:4326",
     # "EPSG:4326" corresponds to the WGS 84 coordinate system, commonly used for GPS coordinates.
     "geospatial_bounds_vertical_crs": "EPSG:5831",
@@ -1646,9 +1861,10 @@ ds.attrs.update({
     "comment": ""  # start empty
 
 })
-
+sample_rate_rounded = int(round(sample_rate))
 # Preserve date_created if file exists, if it does not set to now
-output_path = f"{directory}{site}{year_str}{mooring}{pres}_{serial}_CFcompliant_CTD.nc"
+
+output_path = f"{directory}{instrument_type}_{cruise_number}_{mooring_number}_{serial_number}_{sample_rate_rounded}.nc"
 date_created_val = dtmod.datetime.utcnow().isoformat()
 
 if os.path.exists(output_path):
@@ -1659,14 +1875,17 @@ if os.path.exists(output_path):
     except Exception as e:
         print(f"⚠ Could not read existing file's date_created: {e}")
 
+
 ds.attrs["date_created"] = date_created_val
 ds.attrs["date_modified"] = dtmod.datetime.utcnow().isoformat()
-note("date_created and date_modified are recorded in UTC (Coordinated Universal Time)")
+#note("date_created and date_modified are recorded in UTC (Coordinated Universal Time)")
+ds.attrs["title"] = project
 
 # Add processing notes to the comment: global attribute
 for msg in processing_notes:
     update_comment(ds, msg)
-update_comment(ds, "Final NetCDF created (CF-compliant)")
+#update_comment(ds, "Final NetCDF created (CF-compliant)")
+
 
 # Save NetCDF
 ds.to_netcdf(output_path, format="NETCDF4", mode="w")
@@ -1677,7 +1896,11 @@ print(f"✔ Adaptive NetCDF file saved: {output_path}")
 # SHN -- maybe redundant -- TBD
 mean_pressure = np.mean(p)
 print(f'Mean Pressure: {mean_pressure:.2f} db')
+print(f'Depth Calculated: {inst_depth:.2f} m')
 time_diff = np.diff(dt)  # Time differences between consecutive timestamps
 time_diff_seconds = np.array([td.total_seconds() for td in time_diff])  # Convert to seconds
 computed_sample_rate = np.mean(time_diff_seconds)
 print(f"Computed Sample Rate: {computed_sample_rate:.2f} s")
+
+##
+
