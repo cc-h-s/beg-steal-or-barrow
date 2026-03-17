@@ -69,3 +69,13 @@ ___
 19. Create NetCDF Variables
      * This is where all the variables are prepared for CIOOS compliant file and shouldn't require any changes.
      * If there is additional information about the deployment/processing not recorded in the comment earlier in the script, add it at the end before the file is saved using `note("Additional important info")`. 
+
+# Suggested next steps 
+### This script should run without issue, but there are a few ways the workflow should or could be improved upon. 
+
+1. Update variable names so that original variables are not overwritten when trimmed. This would allow changes to trim indices after trimming without requiring the variables to be reloaded.
+2. Update conversion of p for RBR files from raw pressure to sea pressure so that it can't get accidentally converted more than once if the section is run again. (Easy fix: Add while loop with flag that is set in previous section, so that conversion will only run once unless variables reloaded).
+3. Add a section that checks for stationarity of variables across deployment to identify any sensor drift.
+4. Possible accompanying file: plots data from all instruments on single mooring to check that all measurements make sense relative to other observations in water column. This script would then edit the comment of the .nc file to record that this test was done and that observations are within expected range.
+5. For files with high sampling rate, changes are necessary to be able to efficiently and accurately flag data. This could include: plotting the timeseries in chunks so that the data can be scanned thoroughly without the figure window lagging/crashing. In some instances there are hundreds of flags manually recorded which aren't easily transcribed directly into the script: add an option for the processing script to read in an excel file where flags have been recorded.
+6. 
