@@ -1,5 +1,5 @@
-# Processing 101 
-### **This section of readme is intended to be a concise summary of steps required to run code. Please refer to next section for detailed explanations, tips for identifying outliers, bugs you may come across, etc. 
+# Processing 101 - Quick Start
+### **This top section of is intended to be a concise summary of steps required to run code. Please refer to next section for detailed explanations, tips for identifying outliers, bugs you may come across, etc. 
 1. For each file to be processed, create new folder locally containing: 
      * original CTD file from instrument (M0000_SN00000.cnv)
      * Any auxiliary files from instrument
