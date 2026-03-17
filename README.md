@@ -29,7 +29,7 @@
 7. Time Correction (Legacy code from Kurtis Anstey, rarely required) 
 8. Correct for clock drift
      * Added print out in previous section to tell user whether cnv_jd_drift or datetime_drift should be True. 
-     * Added Drift_Recorded to improve note recorded at the end of this section. If drift is recorded, set to true and change tot_drift accordingly. If no Drift_Recorded, 'Drift_Recorded = False' and 'tot_drift = 0'         
+     * Added Drift_Recorded to improve note recorded at the end of this section. If drift is recorded, set to true and change tot_drift accordingly. If no Drift_Recorded, `Drift_Recorded = False` and `tot_drift = 0`         
 9. Trim indices
      * Tip: Use pressure to select indices, usually last sensor to stabilize
      * ★ because original variables are trimmed in this step (`t = t[start:finish]`), if you want to change trim indices after you've already trimmed, start again at Section 1.
@@ -46,9 +46,9 @@
     12B) Flagging
      * All flags are recorded here for measured variables temperature, conductivity, pressure, and oxygen. Derived variables inherit relevant flags.
 ---
-12 option: Use suggested flags ('Flag_From_Filter = True')
+12 option: Use suggested flags (`Flag_From_Filter = True`)
      * For some files that sample at a very high rate, it takes a lot of time to manually qc the entire timeseries (millions of observations) and may cause the program to crash depending on the machine you are using and memory available. In these cases, it may be useful to have the option to use the suggested flags. 
-     * This option ('Flag_From_Filter = True') will use flags from the Hampel filter in *addition* to any flags you manually enter. 
+     * This option (`Flag_From_Filter = True`) will use flags from the Hampel filter in *addition* to any flags you manually enter. 
      * Using suggested flags still requires user input and supervision: the filter should be tuned and reviewed to ensure it is doing a reasonable job of flagging questionable points. 
      * Using this option will automatically update the processing note to indicate how flagging was done, and the filter options selected. 
      * All flags from filter are automatically flagged as 3 (questionable).
@@ -68,4 +68,4 @@ ___
      * The second part of this section is for recording mooring movement during the deployment. If the mooring moved (evident from pressure timeseries reviewed in flagging section), set Mooring_Move to True and change the index of the shift accordingly. If numerous data were distorted during this shift, change index_impact to the approximate length of bad data. Intrument depth is then calculated for before and after the shift and recorded in the processing notes along with the date of the shift. The very last note in the section is for any additional notes about why the mooring moved (suspected causes, known recovery for maintenance, etc.)
 19. Create NetCDF Variables
      * This is where all the variables are prepared for CIOOS compliant file and shouldn't require any changes.
-     * If there is additional information about the deployment/processing not recorded in the comment earlier in the script, add it at the end before the file is saved using 'note("Additional important info")'. 
+     * If there is additional information about the deployment/processing not recorded in the comment earlier in the script, add it at the end before the file is saved using `note("Additional important info")`. 
