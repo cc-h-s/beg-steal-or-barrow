@@ -17,26 +17,64 @@
 
 # Detailed section notes 
 1. Import Packages
-2. Metadata 
-3. Load Raw Data
+2. Metadata
+   #### Review all fields in this section for each file. The lock symbol indicates fields that will generally be the same for an entire set of files. All other fields will need to be altered for each instrument.
+   
+    - 🔒 `year_n = 2022`  year deployed, not recovered
+    - 🔒 `chief_scientist = "Clark Richards"` 
+    - 🔒 `cruise_number = 'RAD2022375'` 
+    - 🔒 `deployment_name = "CCGS PIERRE RADISSON"`  deployment refers to the vessel
+    - 🔒 `sdn_deployment_id = "SDN:C17::18RD"` SDN-C17 vocabulary #18RD = RADISSON; 18GO = Des Gros
+
+    * `site = 'BS-SOUTH-CENTRAL'` mooring site (eg. BS-SOUTH, BS-SOUTH-CENTRAL, etc.)
+    * `mooring = 'M2170'`
+    * `latdeg = 74`
+    * `latdec = 11.874`  latitude in degrees and decimal minutes
+    * `londeg = 90`
+    * `londec = 49.038`  longitude in degrees and decimal minutes
+    - 🔒 `platform = "mooring"`
+    - 🔒 `sdn_platform_id = "SDN:L06::48, SDN:L06::43"` SDN-L06 vocabulary #EX. 48 = mooring, 43 = subsurface mooring
+      
+    * `corr_water_depth = 259`  in metres, computed from sounding
+    - 🔒 `data_type = "moored CTD"` data type (for netcdf, eg. moored CTD)
+    - 🔒 `instrument_type = "MCTD"` short form (eg. MCTD)
+    - `inst_type = "Microcat"` instrument type (for netcdf, eg. Microcat)
+    * `instrument_model = "SBE37-SM"`  instrument model, eg. SBE37-SM, SBE37-SMP, SBE37-SMP-ODO, RBR Solo, RBR Concerto
+    * `serial = 'SN22954'`  instrument serial number (if included in filename)
+    - 🔒 `project = "Barrow Strait Monitoring and Real Time Observatory Project"`
+    - 🔒 `program = "Maritimes Region Barrow Strait Monitoring Program"`
+    - 🔒 `location = "Barrow Strait"`
+    - 🔒 `country = "SDN:C32::CA, SDN:C18::18"` SDN C32 vocabulary, CA = CANADA
+    - 🔒 `country_code = "1810"` 1810 = CANADA
+    - 🔒 `cruise_name = "mooring deployment"` generic descriptor for the cruise
+
+I added code for the following fields that assigns the correct id based on `instrument_model`:
+
+    if instrument_model == "SBE37-SM" or instrument_model == "SBE37-SMP":
+        `sdn_instrument_id = "SDN:L22::TOOL1456"`
+        `sdn_device_id = "SDN:L05::350, SDN:L05::130, SDN:L05::134, SDN:L05::WPS"`
+
+This currently works for SBE37-SM, SBE37-SMP, SBE37-SMP-ODO, RBR Solo, RBR Concerto, and RBR Duet. Other instruments can be added as needed. 
+
+4. Load Raw Data
      * ctd processing package does not recognize all header keys (i.e. prdM). Code added so that headers aren't missed, but check that all expected raw keys are being read correctly in this section.
-4. Save Raw Data as NetCDF
-5. Extract Variables
+5. Save Raw Data as NetCDF
+6. Extract Variables
      * Check that raw keys from previous section are in variable map.
      * ★ 'p' for Seabird instruments is sea pressure, but for RBR it's *raw* pressure. Code added to convert p from RBR instruments to sea pressure. If in doubt, load original file into Ruskin to ensure p is correct. 
-6. Check time data (Figure created, looking for straight line with no jumps)
+7. Check time data (Figure created, looking for straight line with no jumps)
    <img width="600" height="400" alt="time_check" src="https://github.com/user-attachments/assets/b3a739f8-8461-4439-8b2c-e39a3fe43cbb" />
-7. Time Correction (Legacy code from Kurtis Anstey, rarely required) 
-8. Correct for clock drift
+8. Time Correction (Legacy code from Kurtis Anstey, rarely required) 
+9. Correct for clock drift
      * Added print out in previous section to tell user whether cnv_jd_drift or datetime_drift should be True. 
      * Added Drift_Recorded to improve note recorded at the end of this section. If drift is recorded, set to true and change tot_drift accordingly. If no Drift_Recorded, `Drift_Recorded = False` and `tot_drift = 0`         
-9. Trim indices
+10. Trim indices
      * Tip: Use pressure to select indices, usually last sensor to stabilize
      * ★ because original variables are trimmed in this step (`t = t[start:finish]`), if you want to change trim indices after you've already trimmed, start again at Section 1.
-10. Temperature Salinity Plot
+11. Temperature Salinity Plot
      * If there is a strong T-S correlation observed during the deployment, these plots can be useful for identifying outliers.
-11. Temperature Salinity Plot (Interactive) 
-12. A) Manual Data Inspection
+12. Temperature Salinity Plot (Interactive) 
+13. A) Manual Data Inspection
      * Spike data suggestions. Default is the despike function from ctd toolbox but this performs poorly and may not be suitable for our data (e.g. the 'block' parameter is supposed to be the expected length of spikes, theoretically 1 or 2, yet is set to 200). This filter also crashes with large datasets. Can still be used if Use_CHS_Func = False
      * Use_CHS_Func = True will use a Hampel filter to suggest outliers. This filter uses a rolling median and rolling median absolute deviation (MAD) to identify outliers.
      * The most accurate hampel filter is very slow for large datasets, so hampel_fast was added and will automatically run on variables longer than 200,000 points (this can be customized). The difference between the two is how MAD is calculated, the original is exact and the fast version uses an approximation.
