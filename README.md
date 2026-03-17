@@ -13,7 +13,7 @@
      * Change start and finish fields accordingly
 5. Section 13: 
      * Select which variables are to be flagged (e.g. `flag_c = True` if conductivity should be flagged)
-     * Using the figures created to identify erroneous points, manually enter each index to be flagged and it's corresponding WOCE flag
+     * Use the figures created to identify outliers that are likely not true measurements. Manually enter each index to be flagged and it's corresponding WOCE flag (3 if questionable, 4 if clearly bad datum). 
 
 # Detailed section notes 
 1. Import Packages
@@ -47,12 +47,12 @@
      * All flags are recorded here for measured variables temperature, conductivity, pressure, and oxygen. Derived variables inherit relevant flags.
 ---
 12 option: Use suggested flags (`Flag_From_Filter = True`)
-     * For some files that sample at a very high rate, it takes a lot of time to manually qc the entire timeseries (millions of observations) and may cause the program to crash depending on the machine you are using and memory available. In these cases, it may be useful to have the option to use the suggested flags. 
-     * This option (`Flag_From_Filter = True`) will use flags from the Hampel filter in *addition* to any flags you manually enter. 
-     * Using suggested flags still requires user input and supervision: the filter should be tuned and reviewed to ensure it is doing a reasonable job of flagging questionable points. 
-     * Using this option will automatically update the processing note to indicate how flagging was done, and the filter options selected. 
-     * All flags from filter are automatically flagged as 3 (questionable).
-     * This is also a good option if you are processing a file preliminarily, and plan to return to it at a later date for a thorough manual flagging. 
+- For some files that sample at a very high rate, it takes a lot of time to manually qc the entire timeseries (millions of observations) and may cause the program to crash depending on the machine you are using and memory available. In these cases, it may be useful to have the option to use the suggested flags. 
+- This option (`Flag_From_Filter = True`) will use flags from the Hampel filter in *addition* to any flags you manually enter. 
+- Using suggested flags still requires user input and supervision: the filter should be tuned and reviewed to ensure it is doing a reasonable job of flagging questionable points. 
+- Using this option will automatically update the processing note to indicate how flagging was done, and the filter options selected. 
+- All flags from filter are automatically flagged as 3 (questionable).
+- This is also a good option if you are processing a file preliminarily, and plan to return to it at a later date for a thorough manual flagging. 
 ___
        
 13. Plots
