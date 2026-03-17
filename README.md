@@ -18,7 +18,7 @@
 # Detailed section notes 
 1. Import Packages
 2. Metadata
-   #### Review all fields in this section for each file. The lock symbol indicates fields that will generally be the same for an entire set of files. All other fields will need to be altered for each instrument.
+   #### These are all the fields that need to be reviewed and/or updated for each file. The lock symbol indicates fields that will generally be the same for an entire set of files. All other fields need to be altered for each instrument. To complete this section reference the mooring logs for instrument deployment. Specific codes can be found here: https://vocab.seadatanet.org/search.
    
     - 🔒 `year_n = 2022`  year deployed, not recovered
     - 🔒 `chief_scientist = "Clark Richards"` 
@@ -35,7 +35,7 @@
     - 🔒 `platform = "mooring"`
     - 🔒 `sdn_platform_id = "SDN:L06::48, SDN:L06::43"` SDN-L06 vocabulary #EX. 48 = mooring, 43 = subsurface mooring
       
-    * `corr_water_depth = 259`  in metres, computed from sounding
+    * `corr_water_depth = 259`  in metres, from sounding
     - 🔒 `data_type = "moored CTD"` data type (for netcdf, eg. moored CTD)
     - 🔒 `instrument_type = "MCTD"` short form (eg. MCTD)
     - `inst_type = "Microcat"` instrument type (for netcdf, eg. Microcat)
