@@ -113,6 +113,20 @@ ___
      * This is where all the variables are prepared for CIOOS compliant file and shouldn't require any changes.
      * If there is additional information about the deployment/processing not recorded in the comment earlier in the script, add it at the end before the file is saved using `note("Additional important info")`. 
 
+## Let's check! 
+### Once you've run the processing script, check for any inconsistencies between the metadata and the log sheets: 
+
+1. Instrument depth
+   * Check that instrument is close to target depth by referencing the mooring diagram. Any offset present should be the approximate difference between the depth on the mooring diagram and the sounding depth recorded during deployment.
+   * Confirm that instrument depth makes sense relative to other instruments on mooring. Locations on mooring are not exact (it is unlikely for calculated depths of two instruments to be precisely 20.0 m apart as designed), but if anything is off by more than a couple metres it should be investigated (could be error on mooring diagram, pressure converted incorrectly, change of plans during mooring deployment, etc.)
+   * If instrument is at unexpected depth it may be necessary to add note to file comment.
+2. Sampling rate
+   * Confirm that true sample_rate is the same as the target sample_rate recorded in instrument log files.
+3. Variables
+   * Check that all expected variables exist in the final file and that values are reasonable for mooring location (max and min are recorded in metadata).
+4. Everything else
+   * Generate report by uploading file to [compliance checker](https://compliance.ioos.us/index.html) with appropriate convention selected (i.e. CF 1.6) to make sure the file is compliant. Look through the metadata and check that all fields are correct and appropriate.
+
 # Suggested next steps 
 ### This script should run without issue, but there are a few ways the workflow should or could be improved upon. 
 
