@@ -34,7 +34,8 @@
      * Tip: Use pressure to select indices, usually last sensor to stabilize
      * ★ because original variables are trimmed in this step (`t = t[start:finish]`), if you want to change trim indices after you've already trimmed, start again at Section 1.
 10. Temperature Salinity Plot
-11. Temperature Salinity Plot (Interactive) 
+     * If there is a strong T-S correlation observed during the deployment, these plots can be useful for identifying outliers.
+12. Temperature Salinity Plot (Interactive) 
 12 A. Manual Data Inspection
      * Spike data suggestions. Default is the despike function from ctd toolbox but this performs poorly and may not be suitable for our data (e.g. the 'block' parameter is supposed to be the expected length of spikes, theoretically 1 or 2, yet is set to 200). This filter also crashes with large datasets. Can still be used if Use_CHS_Func = False
      * Use_CHS_Func = True will use a Hampel filter to suggest outliers. This filter uses a rolling median and rolling median absolute deviation (MAD) to identify outliers.
