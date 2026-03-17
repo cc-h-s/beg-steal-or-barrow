@@ -19,7 +19,12 @@
 1. Import Packages
 2. Metadata
    #### These are all the fields that need to be reviewed and/or updated for each file. The lock symbol indicates fields that will generally be the same for an entire set of files. All other fields need to be altered for each instrument. To complete this section reference the mooring logs for instrument deployment. Specific codes can be found here: https://vocab.seadatanet.org/search.
-   
+
+    - 🔒 `creator_name = "Clark Richards"` These creator fields should be whoever processes the file, or whoever is most familiar with the processing of the file, *and* will likely be able to be contacted about the file for the forseeable future.
+    - 🔒 `creator_email = "Clark.Richards@dfo-mpo.gc.ca"`
+
+    * `directory = f'./Barrow_RawData/'` directory of raw data file, change to: f'./' when file in same folder as processing script 
+    * `filename = 'M2170_SN22954.cnv'` 
     - 🔒 `year_n = 2022`  year deployed, not recovered
     - 🔒 `chief_scientist = "Clark Richards"` 
     - 🔒 `cruise_number = 'RAD2022375'` 
