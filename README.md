@@ -40,7 +40,7 @@
     - 🔒 `instrument_type = "MCTD"` short form (eg. MCTD)
     - `inst_type = "Microcat"` instrument type (for netcdf, eg. Microcat)
     * `instrument_model = "SBE37-SM"`  instrument model, eg. SBE37-SM, SBE37-SMP, SBE37-SMP-ODO, RBR Solo, RBR Concerto
-    * `serial = 'SN22954'`  instrument serial number (if included in filename)
+    * `serial = 'SN22954'`  instrument serial number 
     - 🔒 `project = "Barrow Strait Monitoring and Real Time Observatory Project"`
     - 🔒 `program = "Maritimes Region Barrow Strait Monitoring Program"`
     - 🔒 `location = "Barrow Strait"`
