@@ -92,8 +92,8 @@ This currently works for SBE37-SM, SBE37-SMP, SBE37-SMP-ODO, RBR Solo, RBR Conce
 12 option: Use suggested flags (`Flag_From_Filter = True`)
 - For some files that sample at a very high rate, it takes a lot of time to manually qc the entire timeseries (millions of observations) and may cause the program to crash depending on the machine you are using and memory available. In these cases, it may be useful to have the option to use the suggested flags. 
 - This option (`Flag_From_Filter = True`) will use flags from the Hampel filter in *addition* to any flags you manually enter. 
-- Using suggested flags still requires user input and supervision: the filter should be tuned and reviewed to ensure it is doing a reasonable job of flagging questionable points. 
-- Using this option will automatically update the processing note to indicate how flagging was done, and the filter options selected. 
+- Using suggested flags still requires user input and supervision: the filter should be tuned and reviewed to ensure it is doing a reasonable job of flagging bad data. 
+- Using this option will automatically update the processing note to indicate how flagging was done, as well as the filter parameters used. 
 - All flags from filter are automatically flagged as 3 (questionable).
 - This is also a good option if you are processing a file preliminarily, and plan to return to it at a later date for a thorough manual flagging. 
 ___
