@@ -239,6 +239,8 @@ elif is_rsk:
 else:
     raise ValueError("Unsupported file type. Must be CNV, ASC, or RSK")
 
+rsk_p_raw = True
+
 print("Raw keys detected:", raw_keys)
 
 # end region
@@ -355,11 +357,12 @@ time = vars_dict.get('time')
 do = vars_dict.get('do') if 'do' in vars_dict else None
 
 # --- Convert RBR abs p to sea p, same way Seabird does ---
-if is_rsk and p is not None:
+if is_rsk and rsk_p_raw and p is not None:
     # Subtract standard atmospheric pressure: 10.1325 dbar
     p = p - 10.1325
     # Prevent negative values
     p[p < 0] = 0
+    rsk_p_raw = False
 
 # --- ASC time conversion ---
 if asc and 'dates' in raw_keys and 'times' in raw_keys:
