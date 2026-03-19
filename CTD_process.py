@@ -239,6 +239,8 @@ elif is_rsk:
 else:
     raise ValueError("Unsupported file type. Must be CNV, ASC, or RSK")
 
+rsk_p_raw = True
+
 print("Raw keys detected:", raw_keys)
 
 # end region
@@ -355,11 +357,12 @@ time = vars_dict.get('time')
 do = vars_dict.get('do') if 'do' in vars_dict else None
 
 # --- Convert RBR abs p to sea p, same way Seabird does ---
-if is_rsk and p is not None:
+if is_rsk and rsk_p_raw and p is not None:
     # Subtract standard atmospheric pressure: 10.1325 dbar
     p = p - 10.1325
     # Prevent negative values
     p[p < 0] = 0
+    rsk_p_raw = False
 
 # --- ASC time conversion ---
 if asc and 'dates' in raw_keys and 'times' in raw_keys:
@@ -563,7 +566,7 @@ print("Detected time format:",
 # *** if SLOWER/BEHIND than PC/true time, tot_drift is NEGATIVE; ***
 # *** if FASTER/AHEAD, this value POSITIVE (PC/true time + tot_drift = instrument time)***
 
-Drift_Recorded = True # Added seperate case for when clock drift not recorded vs truly 0 -chs
+Drift_Recorded = True # Added separate case for when clock drift not recorded vs truly 0 -chs
 tot_drift = -46  # total clock drift from recovery time check, seconds.
 cnv_jd_drift = True  # True if .cnv file with Julian day time data, not corrected above
 datetime_drift = False  # True if datetime time data, or if corrected above
@@ -848,7 +851,6 @@ detect_spikes_p = False  # Optional: Detect in Pressure
 
 # region
 Use_CHS_Func = True  # Uses Hampel detection to suggest outliers
-#Use_CHS_outlier = False  # Detects outliers from scatter plot
 
 # Spike detection parameters from original code
 if sample_rate == 900:
@@ -900,7 +902,7 @@ def hampel_fast(x, window_size=5, n=3, floor_mad=1e-3):
 if Use_CHS_Func:
     if len(data) > 200000:
         window_size = 15
-        n = 10
+        n = 5
         floor_mad = 8e-3
         spike_indices_t = hampel_fast(t, window_size, n, floor_mad) if detect_spikes_t else []
         spike_indices_c = hampel_fast(c, window_size, n, floor_mad) if detect_spikes_c else []
@@ -923,7 +925,7 @@ else:
     print("Outliers in t (despike):", spike_indices_t[:20])
     print("Outliers in c (despike):", spike_indices_c[:20])
 
-##
+## 12B - plotting
 # Plotting
 var_labels = {
     't': 'Temperature',
@@ -1373,6 +1375,7 @@ if no_pressure_sensor:
     round_p = 10000  # constant pressure value if no pressure sensor
     p0 = round_p
     inst_depth = 100000
+    note(f"Pressure not recorded by instrument, depth assumed from position on mooring and sounding depth recorded.")
 else:
     mean_p = np.nanmean(p)
     p0 = np.nanmedian(p)
