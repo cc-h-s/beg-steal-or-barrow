@@ -69,7 +69,7 @@ This currently works for SBE37-SM, SBE37-SMP, SBE37-SMP-ODO, RBR Solo, RBR Conce
      * ★ 'p' for Seabird instruments is sea pressure, but for RBR it's *raw* pressure. Code added to convert p from RBR instruments to sea pressure. If in doubt, load original file into Ruskin to ensure p is correct. 
 7. Check time data (Figure created, looking for straight line with no jumps)
    <img width="600" height="400" alt="time_check" src="https://github.com/user-attachments/assets/b3a739f8-8461-4439-8b2c-e39a3fe43cbb" />
-8. Time Correction (Legacy code from Kurtis Anstey, rarely required) 
+8. Time Correction (Legacy code from Kurtis Anstey, rarely required. (but if you have questions ask him). 
 9. Correct for clock drift
      * Added print out in previous section to tell user whether cnv_jd_drift or datetime_drift should be True. 
      * Added Drift_Recorded to improve note recorded at the end of this section. If drift is recorded, set to true and change tot_drift accordingly. If no Drift_Recorded, `Drift_Recorded = False` and `tot_drift = 0`         
